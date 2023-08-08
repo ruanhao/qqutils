@@ -1,12 +1,28 @@
-from hprint import hprint as qqprint
-from functools import partial
+from hprint import hprint
+from functools import partial, wraps
 from icecream import Source
 import inspect
+import traceback
+import logging
 
 
-__all__ = ['qqprint']
+__all__ = [
+    # PRINT UTILS
+    'hprint',
 
-# SETUP UTILS
+    # SETUP UTILS
+    'install_print_with_flush',
+
+    # DATASCTRUCTURE MANIPULATION UTILS
+    'chain_get',
+    'flatten',
+    'kvdict',
+    'kdict',
+
+    # EXCEPTION UTILS
+    'sneaky'
+]
+
 
 
 def install_print_with_flush():
@@ -17,9 +33,6 @@ def install_print_with_flush():
 
     setattr(builtins, 'print0', print)
     setattr(builtins, 'print', partial(print, flush=True))
-
-
-# DATASCTRUCTURE MANIPULATION UTILS
 
 
 def chain_get(data, chain, default=None):
@@ -57,6 +70,7 @@ def kdict(*args, **kwargs):
     assert not kwargs, "kwargs not allowed"
     callFrame = inspect.currentframe().f_back
     callNode = Source.executing(callFrame).node
+    assert callNode, "should not be invoked in a REPL"
     source = Source.for_frame(callFrame)
     tokens = source.asttokens()
     argStrs = [
@@ -67,4 +81,22 @@ def kdict(*args, **kwargs):
 
 
 def kvdict(*lst):
+    """
+    >>> kvdict('a', 'b', 'c')
+    {'a': 'a', 'b': 'b', 'c': 'c'}
+    """
     return dict(list(zip(lst, lst)))
+
+
+def sneaky(logger=None):
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args, **kw):
+            try:
+                return func(*args, **kw)
+            except Exception as e:
+                tb = traceback.format_exc()
+                if logger:
+                    logger.error("%s: \n%s", e, str(tb))
+        return wrapper
+    return decorate
