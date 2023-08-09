@@ -22,7 +22,7 @@ def send_mail(
         smtp_server='smtp.gmail.com',
         smtp_port=0,
 ):
-    logger.info(f"sending mail to {recipients} (cc:{cc}, bcc:{bcc}) on behalf of '{you}' via <{smtp_server}>, subject: '{subject}', {len(attachments or [])} attachments:{attachments}}")
+    logger.info(f"sending mail to {recipients} (cc:{cc}, bcc:{bcc}) on behalf of '{you}' via <{smtp_server}>, subject: '{subject}', {len(attachments or [])} attachments:{attachments}")
     msg = MIMEMultipart()
     msg['From'] = you
     msg['To'] = ', '.join(recipients)
