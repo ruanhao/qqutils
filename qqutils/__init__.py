@@ -285,7 +285,7 @@ def _ic_time_format():
 
 def configure_logging(name, level=None):
     level = level or logging.INFO
-    install_print_with_flush()
+    # install_print_with_flush()
     ic.configureOutput(prefix=_ic_time_format, includeContext=True)
     ic.disable()
     install_ic()
