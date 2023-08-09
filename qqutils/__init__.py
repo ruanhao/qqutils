@@ -3,7 +3,7 @@ from functools import partial, wraps
 from icecream import Source
 import inspect
 import traceback
-import logging
+from .mailutils import send_mail
 
 
 __all__ = [
@@ -20,9 +20,11 @@ __all__ = [
     'kdict',
 
     # EXCEPTION UTILS
-    'sneaky'
-]
+    'sneaky',
 
+    # MAIL
+    'send_mail'
+]
 
 
 def install_print_with_flush():
