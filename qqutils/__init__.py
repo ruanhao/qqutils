@@ -22,7 +22,6 @@ from .netutils import (
 from datetime import datetime, timezone
 import logging
 import sys
-from icecream import ic, install as install_ic
 import tempfile
 from logging.handlers import RotatingFileHandler
 import os
@@ -88,6 +87,7 @@ __all__ = [
 
 
     # DEBUG UTILS
+    'setup_icecream',
     'assert_that',
     'simple_timing',
     'debug_timing',
@@ -302,16 +302,9 @@ def pget(obj, key, default='n/a'):
         return default
 
 
-def _ic_time_format():
-    return f'\n{datetime.now()}| '
-
-
-def configure_logging(name, level=None):
+def configure_logging(name, level=None, setup_ic=False):
     level = level or logging.INFO
     # install_print_with_flush()
-    ic.configureOutput(prefix=_ic_time_format, includeContext=True)
-    ic.disable()
-    install_ic()
 
     logging.basicConfig(
         handlers=[
@@ -325,7 +318,6 @@ def configure_logging(name, level=None):
         format='%(asctime)s - %(name)s - %(levelname)s - %(threadName)s - %(message)s',
         datefmt='%m/%d/%Y %I:%M:%S %p')
     if level == logging.DEBUG:
-        ic.enable()
         import http.client as http_client
         http_client.HTTPConnection.debuglevel = 1
         http_client_logger = logging.getLogger("http.client")
@@ -335,6 +327,9 @@ def configure_logging(name, level=None):
             http_client_logger.debug(" ".join(args))
 
         http_client.print = __print_to_log
+
+    if setup_ic:
+        setup_icecream(level == logging.DEBUG)
 
 
 # annotation
@@ -386,3 +381,34 @@ def prompt(msg='Please enter:', type=str, default=None):
 
 def set_with_key(iterable, key):
     return set({key(i): i for i in iterable}.values())
+
+
+def setup_icecream(verbose=False):
+    try:
+        from icecream import ic, install
+
+        def __ic_time_format():
+            return f'{datetime.now()}|> '
+
+        ic.configureOutput(prefix=__ic_time_format, includeContext=True)
+        install()
+        if not verbose:
+            ic.disable()
+    except ImportError:
+        try:
+            builtins = __import__('__builtin__')
+        except ImportError:
+            builtins = __import__('builtins')
+
+        def __ic(*args):
+            nonlocal verbose
+            if verbose:
+                print(f'{datetime.now()}|>', *args)
+
+            if not args:  # E.g. ic().
+                return None
+            elif len(args) == 1:  # E.g. ic(1).
+                return args[0]
+            else:  # E.g. ic(1, 2, 3).
+                return args
+        setattr(builtins, 'ic', __ic)
