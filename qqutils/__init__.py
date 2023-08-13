@@ -43,6 +43,7 @@ __all__ = [
     'flatten',
     'kvdict',
     'kdict',
+    'set_with_key',
 
     # EXCEPTION UTILS
     'sneaky',
@@ -64,8 +65,10 @@ __all__ = [
 
     # LOGGING
     'pfatal',
-    'pinfo',
     'pdebug',
+    'pinfo',
+    'pwarning',
+    'perror',
     'configure_logging',
 
     # OS UTILS
@@ -151,6 +154,24 @@ def pinfo(msg):
     logger.info(msg)
     if logger.isEnabledFor(logging.INFO):
         print(msg)
+
+
+def perror(msg):
+    frm = inspect.stack()[1]
+    mod = inspect.getmodule(frm[0])
+    logger = getattr(mod, 'logger', _logger)
+    logger.error(msg)
+    if logger.isEnabledFor(logging.ERROR):
+        print(msg, file=sys.stderr)
+
+
+def pwarning(msg):
+    frm = inspect.stack()[1]
+    mod = inspect.getmodule(frm[0])
+    logger = getattr(mod, 'logger', _logger)
+    logger.warning(msg)
+    if logger.isEnabledFor(logging.WARNING):
+        print(msg, file=sys.stderr)
 
 
 def pdebug(msg):
@@ -258,7 +279,7 @@ def kvdict(*lst):
     return dict(list(zip(lst, lst)))
 
 
-def sneaky(logger=None):
+def sneaky(logger=None, console=False):
     def decorate(func):
         @wraps(func)
         def wrapper(*args, **kw):
@@ -268,6 +289,8 @@ def sneaky(logger=None):
                 tb = traceback.format_exc()
                 if logger:
                     logger.error("%s: \n%s", e, str(tb))
+                if console:
+                    print(f"{tb}")
         return wrapper
     return decorate
 
@@ -302,6 +325,7 @@ def configure_logging(name, level=None):
         format='%(asctime)s - %(name)s - %(levelname)s - %(threadName)s - %(message)s',
         datefmt='%m/%d/%Y %I:%M:%S %p')
     if level == logging.DEBUG:
+        ic.enable()
         import http.client as http_client
         http_client.HTTPConnection.debuglevel = 1
         http_client_logger = logging.getLogger("http.client")
@@ -358,3 +382,7 @@ def confirm(abort=False):
 def prompt(msg='Please enter:', type=str, default=None):
     value = click.prompt(msg, type=type, default=default)
     return value
+
+
+def set_with_key(iterable, key):
+    return set({key(i): i for i in iterable}.values())
