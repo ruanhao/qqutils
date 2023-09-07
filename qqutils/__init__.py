@@ -28,7 +28,11 @@ import os
 
 _logger = logging.getLogger(__name__)
 
+CLICK_CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
 __all__ = [
+
+    'CLICK_CONTEXT_SETTINGS',
 
     # PRINT UTILS
     'hprint',
