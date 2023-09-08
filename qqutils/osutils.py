@@ -9,6 +9,7 @@ import subprocess
 import sys
 import getpass
 from contextlib import contextmanager
+import click
 
 
 _logger = logging.getLogger(__name__)
@@ -181,3 +182,37 @@ def module_path(mod=None):
         frm = inspect.stack()[1]
         mod = inspect.getmodule(frm[0])
     return os.path.dirname(mod.__file__)
+
+
+def bye(msg, rc=1, logger=_logger):
+    logger.error(f"Exit with return code: {rc}: {msg}")
+    print(msg, file=sys.stderr)
+    exit(rc)
+
+
+def goodbye(msg=None, logger=_logger):
+    if msg:
+        logger.info(f"Exit normally: {msg}")
+        print(msg)
+    else:
+        logger.info("Exit normally")
+    exit()
+
+
+def write_to_clipboard(output):
+    process = subprocess.Popen('pbcopy', env={'LANG': 'en_US.UTF-8'}, stdin=subprocess.PIPE)
+    process.communicate(output.encode())
+
+
+def pause(msg='Press Enter to continue...', skip=False):
+    if not skip:
+        input(msg)
+
+
+def confirm(abort=False):
+    return click.confirm('Do you want to continue?', abort=abort)
+
+
+def prompt(msg='Please enter:', type=str, default=None):
+    value = click.prompt(msg, type=type, default=default)
+    return value
