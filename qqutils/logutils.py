@@ -42,7 +42,7 @@ def setup_icecream(verbose=False):
         setattr(builtins, 'ic', __ic)
 
 
-def configure_logging(name, level=None, setup_ic=False):
+def configure_logging(name, level=None, setup_ic=True):
     level = level or logging.INFO
     # install_print_with_flush()
 
