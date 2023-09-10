@@ -35,11 +35,14 @@ __all__ = [
     # EXCEPTION UTILS
     'sneaky',
 
-    # NET UTILS
+    # netutils
+    'check_http_response',
     'http_get',
     'http_post',
     'http_put',
     'http_delete',
+    'socket_description',
+    'run_proxy',
 
     # MAIL
     'send_mail',
@@ -67,8 +70,8 @@ __all__ = [
     'is_root',
     'switch_dir',
     'tmpdir',
-    'local_path',
-    'module_path',
+    'from_cwd',
+    'from_module',
     'write_to_clipboard',
     'prompt',
     'confirm',

@@ -77,7 +77,8 @@ def pfatal(msg):
     mod = inspect.getmodule(frm[0])
     logger = getattr(mod, 'logger', _logger)
     logger.critical(msg)
-    bye(msg)
+    print(msg, file=sys.stderr)
+    exit(1)
 
 
 def pinfo(msg):

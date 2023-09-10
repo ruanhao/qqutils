@@ -10,6 +10,7 @@ import sys
 import getpass
 from contextlib import contextmanager
 import click
+from pathlib import Path
 
 
 _logger = logging.getLogger(__name__)
@@ -169,23 +170,29 @@ def tmpdir():
     return tempfile.gettempdir()
 
 
-def local_path(filename=None):
-    frm = inspect.stack()[1]
-    mod = inspect.getmodule(frm[0])
-    if not filename:
-        return module_path(mod)
-    return os.path.join(module_path(mod), filename)
+def from_cwd(*args):
+    absolute = Path(os.path.join(os.getcwd(), *args))
+    absolute.parent.mkdir(parents=True, exist_ok=True)
+    return absolute
 
 
-def module_path(mod=None):
+def _module_path(mod=None):
     if not mod:
         frm = inspect.stack()[1]
         mod = inspect.getmodule(frm[0])
     return os.path.dirname(mod.__file__)
 
 
+def from_module(filename=None):
+    frm = inspect.stack()[1]
+    mod = inspect.getmodule(frm[0])
+    if not filename:
+        return _module_path(mod)
+    return os.path.join(_module_path(mod), filename)
+
+
 def bye(msg, rc=1, logger=_logger):
-    logger.error(f"Exit with return code: {rc}: {msg}")
+    logger.critical(f"Exit with return code: {rc}: {msg}")
     print(msg, file=sys.stderr)
     exit(rc)
 
@@ -213,6 +220,6 @@ def confirm(abort=False):
     return click.confirm('Do you want to continue?', abort=abort)
 
 
-def prompt(msg='Please enter:', type=str, default=None):
-    value = click.prompt(msg, type=type, default=default)
+def prompt(msg='Please enter:', type=str, default=None, prompt_suffix=': '):
+    value = click.prompt(msg, type=type, default=default, prompt_suffix=prompt_suffix)
     return value
