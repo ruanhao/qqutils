@@ -44,6 +44,7 @@ __all__ = [
     'socket_description',
     'run_proxy',
     'sendall',
+    'recvall',
     'eventfd',
 
     # MAIL

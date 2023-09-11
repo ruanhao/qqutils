@@ -62,6 +62,27 @@ def socket_description(sock):
     return f"{sock.getsockname()} <=> {sock.getpeername()}"
 
 
+def recvall(sock, timeout=0):
+    """if timeout is non-zero, it will block at the first time"""
+    buffer = b''
+    origin_blocking = sock.getblocking()
+    if origin_blocking:
+        sock.setblocking(0)
+    try:
+        while True:
+            if select.select([sock], [], [], timeout):
+                try:
+                    buffer += sock.recv(1024)
+                    timeout = 0
+                except socket.error:
+                    return buffer
+            else:
+                return buffer
+    finally:
+        if origin_blocking:
+            sock.setblocking(origin_blocking)
+
+
 def sendall(sock, buffer):
     total_sent = 0
     while total_sent < len(buffer):
