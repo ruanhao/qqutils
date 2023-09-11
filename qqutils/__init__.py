@@ -43,6 +43,7 @@ __all__ = [
     'http_delete',
     'socket_description',
     'run_proxy',
+    'sendall',
 
     # MAIL
     'send_mail',

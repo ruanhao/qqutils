@@ -60,6 +60,16 @@ def socket_description(sock):
     return f"{sock.getsockname()} <=> {sock.getpeername()}"
 
 
+def sendall(sock, buffer):
+    total_sent = 0
+    while total_sent < len(buffer):
+        try:
+            total_sent += sock.send(buffer[total_sent:])
+            # print(f"Totally {total_sent} bytes sent [{round(total_sent / len(buffer) * 100, 2)}%]\r", end='')
+        except socket.error:
+            pass
+
+
 def _transfer(src, dst, direction, handle):
     src_address, src_port = src.getsockname()
     src_peer_address, src_peer_port = src.getpeername()
@@ -73,7 +83,8 @@ def _transfer(src, dst, direction, handle):
                     pdebug(f"[>> {len(buffer)} bytes] {src_peer_address, src_peer_port} >> {dst_address, dst_port}")
                 else:
                     pdebug(f"[<< {len(buffer)} bytes] {dst_peer_address, dst_peer_port} << {src_address, src_port}")
-                dst.send(handle(buffer, direction, src, dst))
+                # dst.sendall(handle(buffer, direction, src, dst))
+                sendall(dst, handle(buffer, direction, src, dst))
             else:    # len(buffer) == 0
                 if direction:
                     pdebug(f"[Inactive] {src_peer_address, src_peer_port}")
@@ -120,7 +131,10 @@ def run_proxy(
     transfer = partial(_transfer, handle=handle or _handle)
     pinfo(f"Proxy server started listening: ({local_host}:{local_port}){'(TLS)' if tls_server else ''} => ({remote_host}:{remote_port}){'(TLS)' if tls else ''} ...")
     while True:
-        src_socket, src_address = server_socket.accept()
+        try:
+            src_socket, src_address = server_socket.accept()
+        except socket.error:
+            continue
         pdebug(f"[Establishing] {src_address} <=> {server_socket.getsockname()} <-> ?")
         try:
             dst_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
