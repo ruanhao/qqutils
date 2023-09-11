@@ -72,11 +72,14 @@ def recvall(sock, timeout=0):
         while True:
             if select.select([sock], [], [], timeout):
                 try:
-                    buffer += sock.recv(1024)
+                    received = sock.recv(1024)
+                    if not received:  # EOF
+                        return buffer
+                    buffer += received
                     timeout = 0
                 except socket.error:
                     return buffer
-            else:
+            else:               # timeout
                 return buffer
     finally:
         if origin_blocking:
