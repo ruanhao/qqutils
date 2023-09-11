@@ -16,7 +16,7 @@ config = {
     'author' : 'Hao Ruan',
     'author_email': 'ruanhao1116@gmail.com',
     'keywords': ['utils'],
-    'version': '0.0.8',
+    'version': '0.0.9',
     'packages': ['qqutils'],
     'install_requires': install_requires,
     'python_requires': ">=3.7, <4",
