@@ -101,31 +101,29 @@ def _transfer(src, dst, direction, handle):
     src_peer_address, src_peer_port = src.getpeername()
     dst_address, dst_port = dst.getsockname()
     dst_peer_address, dst_peer_port = dst.getpeername()
-    while True:
-        try:
+    try:
+        while True:
             buffer = src.recv(4096)
             if len(buffer) > 0:
                 if direction:
                     pdebug(f"[>> {len(buffer)} bytes] {src_peer_address, src_peer_port} >> {dst_address, dst_port}")
                 else:
                     pdebug(f"[<< {len(buffer)} bytes] {dst_peer_address, dst_peer_port} << {src_address, src_port}")
-                # dst.sendall(handle(buffer, direction, src, dst))
                 sendall(dst, handle(buffer, direction, src, dst))
-            else:    # len(buffer) == 0
-                if direction:
-                    pdebug(f"[Inactive] {src_peer_address, src_peer_port}")
-                else:
-                    pdebug(f"[Inactive] {src_address, src_port}")
-                src.close()
-                if not dst._closed:
-                    dst.close()
+            else:    # EOF
                 return
-        except Exception:
-            tb = traceback.format_exc()
-            perror(f"[Exception] {tb}")
-            src.close()
+    except socket.error:
+        pass
+    except Exception:
+        perror(f"[Exception] {traceback.format_exc()}")
+    finally:
+        if direction:
+            pdebug(f"[Inactive] {src_peer_address, src_peer_port}")
+        else:
+            pdebug(f"[Inactive] {src_address, src_port}")
+        src.close()
+        if not dst._closed:
             dst.close()
-            return
 
 
 @cached
