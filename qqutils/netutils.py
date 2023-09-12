@@ -89,14 +89,25 @@ def recvall(sock, timeout=0):
             sock.setblocking(origin_blocking)
 
 
-def sendall(sock, buffer):
+def sendall(sock, buffer, spin=2):
+    origin_blocking = sock.getblocking()
+    if origin_blocking:
+        sock.setblocking(0)
     total_sent = 0
-    while total_sent < len(buffer):
-        try:
-            total_sent += sock.send(buffer[total_sent:])
-            # print(f"Totally {total_sent} bytes sent [{round(total_sent / len(buffer) * 100, 2)}%]\r", end='')
-        except socket.error:
-            pass
+    try:
+        while total_sent < len(buffer):
+            try:
+                total_sent += sock.send(buffer[total_sent:])
+                # print(f"Totally {total_sent/1024} K sent [{round(total_sent / len(buffer) * 100, 2)}%]\r", end='')
+            except socket.error:
+                if spin > 0:
+                    spin -= 1
+                    continue
+                break
+        return buffer[total_sent:]
+    finally:
+        if origin_blocking:
+            sock.setblocking(origin_blocking)
 
 
 @sneaky(logger)
