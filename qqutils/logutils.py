@@ -127,17 +127,27 @@ def install_print_with_flush():
     setattr(builtins, 'print', partial(print, flush=True))
 
 
-def sneaky(logger=None, console=False):
+def _all_args_repr(args, kw):
+    try:
+        args_repr = [repr(arg) for arg in args]
+        kws = [f"{k}={repr(v)}" for k, v in kw.items()]
+        return ', '.join(args_repr + kws)
+    except Exception:
+        return "(?)"
+
+
+def sneaky(logger: logging.Logger = None, console: bool = False):
     def decorate(func):
         @wraps(func)
         def wrapper(*args, **kw):
+            all_args = _all_args_repr(args, kw)
             try:
                 return func(*args, **kw)
             except Exception as e:
-                tb = traceback.format_exc()
+                emsg = f"[{e}] sneaky call: {func.__name__}({all_args})"
                 if logger:
-                    logger.error("%s: \n%s", e, str(tb))
+                    logger.exception(emsg)
                 if console:
-                    print(f"{tb}")
+                    print(emsg, traceback.format_exc(), file=sys.stderr, sep=os.linesep)
         return wrapper
     return decorate

@@ -8,9 +8,12 @@ import traceback
 import select
 import os
 from .funcutils import cached
-from .logutils import pdebug, pinfo, perror
+from .logutils import pdebug, pinfo, perror, sneaky
 from .threadutils import submit_thread
 from .osutils import from_module
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def check_http_response(response, need_raise=True):
@@ -96,6 +99,7 @@ def sendall(sock, buffer):
             pass
 
 
+@sneaky(logger)
 def _transfer(src, dst, direction, handle):
     src_address, src_port = src.getsockname()
     src_peer_address, src_peer_port = src.getpeername()
@@ -113,9 +117,7 @@ def _transfer(src, dst, direction, handle):
             else:    # EOF
                 return
     except socket.error:
-        pass
-    except Exception:
-        perror(f"[Exception] {traceback.format_exc()}")
+        return
     finally:
         if direction:
             pdebug(f"[Inactive] {src_peer_address, src_peer_port}")
