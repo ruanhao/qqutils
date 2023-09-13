@@ -224,6 +224,12 @@ class BaseEventFD(object):
             self._flag = False
             assert self._read(len(self._DATA)) == self._DATA
 
+    def unsafe_write(self):
+        self._write(self._DATA)
+
+    def unsafe_read(self):
+        self._read(len(self._DATA))
+
     def set(self):
         """Set the internal flag to true.
 
