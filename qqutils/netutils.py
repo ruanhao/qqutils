@@ -89,7 +89,8 @@ def recvall(sock, timeout=0):
             sock.setblocking(origin_blocking)
 
 
-def sendall(sock, buffer, spin=2):
+# return the remaining buffer
+def sendall(sock, buffer, spin=2) -> bytes:
     origin_blocking = sock.getblocking()
     if origin_blocking:
         sock.setblocking(0)

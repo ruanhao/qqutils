@@ -72,46 +72,44 @@ def configure_logging(name, level=None, setup_ic=True):
         setup_icecream(level == logging.DEBUG)
 
 
-def pfatal(msg):
+def _get_logger():
     frm = inspect.stack()[1]
     mod = inspect.getmodule(frm[0])
-    logger = getattr(mod, 'logger', _logger)
-    logger.critical(msg)
+    for k, v in mod.__dict__.items():
+        if isinstance(v, logging.Logger):
+            return v
+    return _logger
+
+
+def pfatal(msg):
+    _get_logger().critical(msg)
     print(msg, file=sys.stderr)
     exit(1)
 
 
 def pinfo(msg):
-    frm = inspect.stack()[1]
-    mod = inspect.getmodule(frm[0])
-    logger = getattr(mod, 'logger', _logger)
+    logger = _get_logger()
     logger.info(msg)
     if logger.isEnabledFor(logging.INFO):
         print(msg)
 
 
 def perror(msg):
-    frm = inspect.stack()[1]
-    mod = inspect.getmodule(frm[0])
-    logger = getattr(mod, 'logger', _logger)
+    logger = _get_logger()
     logger.error(msg)
     if logger.isEnabledFor(logging.ERROR):
         print(msg, file=sys.stderr)
 
 
 def pwarning(msg):
-    frm = inspect.stack()[1]
-    mod = inspect.getmodule(frm[0])
-    logger = getattr(mod, 'logger', _logger)
+    logger = _get_logger()
     logger.warning(msg)
     if logger.isEnabledFor(logging.WARNING):
         print(msg, file=sys.stderr)
 
 
 def pdebug(msg):
-    frm = inspect.stack()[1]
-    mod = inspect.getmodule(frm[0])
-    logger = getattr(mod, 'logger', _logger)
+    logger = _get_logger()
     logger.debug(msg)
     if logger.isEnabledFor(logging.DEBUG):
         print(msg)
@@ -137,6 +135,8 @@ def _all_args_repr(args, kw):
 
 
 def sneaky(logger: logging.Logger = None, console: bool = False):
+    logger = logger or _get_logger()
+
     def decorate(func):
         @wraps(func)
         def wrapper(*args, **kw):
