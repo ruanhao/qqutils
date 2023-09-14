@@ -6,6 +6,8 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 install_requires = (this_directory / 'requirements.txt').read_text().splitlines()
 
+version = '0.0.16'
+
 config = {
     'name': 'qqutils',
     'url': 'https://github.com/ruanhao/qqutils',
@@ -16,7 +18,7 @@ config = {
     'author' : 'Hao Ruan',
     'author_email': 'ruanhao1116@gmail.com',
     'keywords': ['utils'],
-    'version': '0.0.16',
+    'version': version,
     'packages': ['qqutils'],
     'install_requires': install_requires,
     'python_requires': ">=3.7, <4",

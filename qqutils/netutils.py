@@ -4,7 +4,6 @@ import sys
 import json
 import socket
 import ssl
-import traceback
 import select
 import os
 from .funcutils import cached
@@ -41,19 +40,12 @@ http_put = partial(_http_method, method='put')
 http_delete = partial(_http_method, method='delete')
 
 
-def is_socket_closed(sock: socket.socket) -> bool:
+def is_readable(sock: socket.socket) -> bool:
     try:
         # this will try to read bytes without blocking and also without removing them from buffer (peek only)
-        data = sock.recv(16, socket.MSG_DONTWAIT | socket.MSG_PEEK)
-        if len(data) == 0:
-            return True
-    except BlockingIOError:
-        return False  # socket is open and reading from it would block
-    except ConnectionResetError:
-        return True  # socket was closed for some other reason
+        return not sock.recv(16, socket.MSG_DONTWAIT | socket.MSG_PEEK) == b''
     except Exception:
         return False
-    return False
 
 
 def _handle(buffer, direction, src, dst):
@@ -63,7 +55,27 @@ def _handle(buffer, direction, src, dst):
 
 
 def socket_description(sock):
+    '''[id: 0xd829bade, L:/127.0.0.1:2069 - R:/127.0.0.1:55666]'''
+    sock_id = hex(id(sock))
+    fileno = sock.fileno()
+    try:
+        s_addr, s_port = sock.getsockname()
+        d_addr, d_port = sock.getpeername()
+        return f"[id: {sock_id}, fd: {fileno}, L:/{s_addr}:{s_port} - R:/{d_addr}:{d_port}]"
+        pass
+    except Exception:
+        return f"[id: {sock_id}, fd: {fileno}, CLOSED]"
     return f"{sock.getsockname()} <=> {sock.getpeername()}"
+
+
+sockinfo = socket_description
+
+
+def sock_connect(address, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((address, port))
+    return sock
+
 
 @contextmanager
 def _preserve_blocking_mode(sock):

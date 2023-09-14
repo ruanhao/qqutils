@@ -19,10 +19,10 @@ __all__ = [
     'hprint',
 
     # threadutils
-    'submit_thread'
-    'submit_thread_and_wait'
+    'submit_thread',
+    'submit_thread_and_wait',
     'submit_thread_and_wait_with_timeout',
-    'submit_thread_with_callback'
+    'submit_thread_with_callback',
     'wait_forever',
 
     # dsutils
@@ -41,11 +41,13 @@ __all__ = [
     'http_post',
     'http_put',
     'http_delete',
-    'socket_description',
+    'sockinfo',
     'run_proxy',
     'sendall',
     'recvall',
     'eventfd',
+    'sock_connect',
+    'is_readable',
 
     # MAIL
     'send_mail',
