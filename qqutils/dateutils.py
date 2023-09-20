@@ -1,6 +1,14 @@
 from datetime import datetime, timezone
 
 
+def timestamp_millis(utc=True) -> int:
+    return int(datetime.now(timezone.utc).timestamp() * 1000)
+
+
+def timestamp_seconds(utc=True) -> int:
+    return int(datetime.now(timezone.utc).timestamp())
+
+
 def datetimestr(ts0, fmt="%m/%d/%Y %H:%M:%S"):
     try:
         ts = int(ts0)

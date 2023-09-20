@@ -55,8 +55,10 @@ __all__ = [
     'datetimestr',
     'pretty_duration',
     'utc_to_local',
+    'timestamp_seconds',
+    'timestamp_millis',
 
-    # LOGGING
+    # logutils
     'pfatal',
     'pdebug',
     'pinfo',
@@ -64,6 +66,7 @@ __all__ = [
     'perror',
     'configure_logging',
     'install_print_with_flush',
+    'LoggerAdapter',
 
     # osutils
     'bye',

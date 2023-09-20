@@ -12,6 +12,7 @@ from .logutils import pdebug, pinfo, perror, sneaky
 from .threadutils import submit_thread
 from .osutils import from_module
 import logging
+from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -64,14 +65,32 @@ def _handle(buffer, direction, src, dst):
 def socket_description(sock):
     return f"{sock.getsockname()} <=> {sock.getpeername()}"
 
-
-def recvall(sock, timeout=0):
-    """if timeout is non-zero, it will block at the first time"""
-    buffer = b''
+@contextmanager
+def _preserve_blocking_mode(sock):
     origin_blocking = sock.getblocking()
     if origin_blocking:
         sock.setblocking(0)
     try:
+        yield sock
+    finally:
+        if origin_blocking:
+            sock.setblocking(origin_blocking)
+
+
+def acceptall(sock: socket.socket) -> list:
+    result = []
+    with _preserve_blocking_mode(sock):
+        while True:
+            try:
+                result.append(sock.accept())
+            except socket.error:
+                return result
+
+
+def recvall(sock: socket.socket, timeout=0) -> bytes:
+    """if timeout is non-zero, it will block at the first time"""
+    buffer = b''
+    with _preserve_blocking_mode(sock):
         while True:
             if select.select([sock], [], [], timeout):
                 try:
@@ -84,18 +103,12 @@ def recvall(sock, timeout=0):
                     return buffer
             else:               # timeout
                 return buffer
-    finally:
-        if origin_blocking:
-            sock.setblocking(origin_blocking)
 
 
 # return the remaining buffer
-def sendall(sock, buffer, spin=2) -> bytes:
-    origin_blocking = sock.getblocking()
-    if origin_blocking:
-        sock.setblocking(0)
+def sendall(sock: socket.socket, buffer: bytes, spin: int = 2) -> bytes:
     total_sent = 0
-    try:
+    with _preserve_blocking_mode(sock):
         while total_sent < len(buffer):
             try:
                 total_sent += sock.send(buffer[total_sent:])
@@ -106,9 +119,6 @@ def sendall(sock, buffer, spin=2) -> bytes:
                     continue
                 break
         return buffer[total_sent:]
-    finally:
-        if origin_blocking:
-            sock.setblocking(origin_blocking)
 
 
 @sneaky(logger)

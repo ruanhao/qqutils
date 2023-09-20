@@ -151,3 +151,15 @@ def sneaky(logger: logging.Logger = None, console: bool = False):
                     print(emsg, traceback.format_exc(), file=sys.stderr, sep=os.linesep)
         return wrapper
     return decorate
+
+
+class LoggerAdapter(logging.LoggerAdapter):
+    def __init__(self, logger, prefix=''):
+        super(LoggerAdapter, self).__init__(logger, {})
+        self.prefix = prefix
+
+    def process(self, msg, kwargs):
+        if self.prefix:
+            return '[%s] %s' % (self.prefix, msg), kwargs
+        else:
+            return msg, kwargs
