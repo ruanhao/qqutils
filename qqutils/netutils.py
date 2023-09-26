@@ -12,6 +12,7 @@ from .threadutils import submit_thread
 from .osutils import from_module
 import logging
 from contextlib import contextmanager
+from icecream import ic
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def check_http_response(response, need_raise=True):
 
 def _http_method(url, method, *args, **kwargs):
     assert method in ['get', 'post', 'delete', 'put']
-    response = getattr(requests, method)(url, *args, **kwargs)
+    response = getattr(requests, method)(ic(url), *ic(args), **ic(kwargs))
     check_http_response(response)
     return response
 
@@ -58,13 +59,18 @@ def socket_description(sock):
     '''[id: 0xd829bade, L:/127.0.0.1:2069 - R:/127.0.0.1:55666]'''
     sock_id = hex(id(sock))
     fileno = sock.fileno()
+    s_addr = None
     try:
         s_addr, s_port = sock.getsockname()
         d_addr, d_port = sock.getpeername()
         return f"[id: {sock_id}, fd: {fileno}, L:/{s_addr}:{s_port} - R:/{d_addr}:{d_port}]"
         pass
     except Exception:
-        return f"[id: {sock_id}, fd: {fileno}, CLOSED]"
+        if s_addr:
+            return f"[id: {sock_id}, fd: {fileno}, LISTENING]"
+        else:
+            return f"[id: {sock_id}, fd: {fileno}, CLOSED]"
+
     return f"{sock.getsockname()} <=> {sock.getpeername()}"
 
 

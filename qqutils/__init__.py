@@ -19,6 +19,7 @@ __all__ = [
     'hprint',
 
     # threadutils
+    'create_thread_pool',
     'submit_thread',
     'submit_thread_and_wait',
     'submit_thread_and_wait_with_timeout',
@@ -45,6 +46,7 @@ __all__ = [
     'run_proxy',
     'sendall',
     'recvall',
+    'acceptall',
     'eventfd',
     'sock_connect',
     'is_readable',
