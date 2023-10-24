@@ -50,6 +50,7 @@ __all__ = [
     'eventfd',
     'sock_connect',
     'is_readable',
+    'is_port_in_use',
 
     # MAIL
     'send_mail',
