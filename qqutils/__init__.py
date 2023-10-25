@@ -9,6 +9,7 @@ from .dateutils import *
 from .dbgutils import *
 from .dsutils import *
 from .dsutils import *
+from .urlutils import *
 
 CLICK_CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -88,6 +89,7 @@ __all__ = [
     'confirm',
     'pause',
     'add_suffix',
+    'modify_extension',
 
     # funcutils
     'cached',
@@ -97,4 +99,7 @@ __all__ = [
     'assert_that',
     'simple_timing',
     'debug_timing',
+
+    # urlutils
+    'get_param',
 ]

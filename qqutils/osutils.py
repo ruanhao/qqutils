@@ -228,3 +228,10 @@ def prompt(msg='Please enter:', type=str, default=None, prompt_suffix=': '):
 def add_suffix(filename: str, suffix: str) -> str:
     filename, file_extension = os.path.splitext(filename)
     return f"{filename}{suffix}{file_extension}"
+
+
+def modify_extension(filename: str, extension: str) -> str:
+    filename, _file_extension = os.path.splitext(filename)
+    if extension.startswith('.'):
+        return f"{filename}{extension}"
+    return f"{filename}.{extension}"
