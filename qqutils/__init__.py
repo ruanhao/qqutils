@@ -87,6 +87,7 @@ __all__ = [
     'prompt',
     'confirm',
     'pause',
+    'add_suffix',
 
     # funcutils
     'cached',

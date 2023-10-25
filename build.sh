@@ -7,4 +7,8 @@
 
 tempdir="$(mktemp -d)"
 file "$tempdir"
-python setup.py sdist -d "$tempdir" bdist_wheel -d "$tempdir" && twine upload -u ruanhao $tempdir/*
+# Must prepare $HOME/.pypirc with API token:
+# [pypi]
+#   username = __token__
+#   password = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+python setup.py sdist -d "$tempdir" bdist_wheel -d "$tempdir" && twine upload $tempdir/*

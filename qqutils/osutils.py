@@ -223,3 +223,8 @@ def confirm(abort=False):
 def prompt(msg='Please enter:', type=str, default=None, prompt_suffix=': '):
     value = click.prompt(msg, type=type, default=default, prompt_suffix=prompt_suffix)
     return value
+
+
+def add_suffix(filename: str, suffix: str) -> str:
+    filename, file_extension = os.path.splitext(filename)
+    return f"{filename}{suffix}{file_extension}"
