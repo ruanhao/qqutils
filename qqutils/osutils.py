@@ -157,6 +157,7 @@ def switch_dir(dir=None):
     if dir is None:
         dir = tempfile.mkdtemp()
     orig_cwd = os.getcwd()
+    Path(dir).mkdir(parents=True, exist_ok=True)
     _logger.info(f"Switching CWD to [{dir}]")
     os.chdir(dir)
     try:
