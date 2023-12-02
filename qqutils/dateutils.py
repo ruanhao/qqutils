@@ -1,4 +1,11 @@
 from datetime import datetime, timezone
+from dateutil.parser import parse
+
+
+def datestr2ts(dateString, ignoretz=False):
+    parsed_t = parse(dateString, ignoretz=ignoretz)
+    ts = parsed_t.timestamp()
+    return ts
 
 
 def timestamp_millis(utc=True) -> int:
@@ -14,14 +21,14 @@ def datetimestr(ts0, fmt="%m/%d/%Y %H:%M:%S"):
         ts = int(ts0)
     except Exception:
         return ''
-    if len(str(ts0)) > 10:
+    if len(str(ts)) > 10:
         ts = int(ts / 1000)
     date_time = datetime.fromtimestamp(ts)
     return date_time.strftime(fmt)
 
 
-def YmdHMS():
-    return datetime.now().strftime("%Y%m%d%H%M%S")
+def YmdHMS(fmt="%Y%m%d%H%M%S"):
+    return datetime.now().strftime(fmt)
 
 
 def utc_to_local(utc_dt):

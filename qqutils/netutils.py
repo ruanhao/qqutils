@@ -1,5 +1,5 @@
 import requests
-from functools import partial
+from functools import partial, lru_cache
 import sys
 import json
 import socket
@@ -13,6 +13,7 @@ from .osutils import from_module
 import logging
 from contextlib import contextmanager
 from icecream import ic
+from requests.adapters import HTTPAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,18 @@ def check_http_response(response, need_raise=True):
         response.raise_for_status()
 
 
+@lru_cache(maxsize=8)
+def __http_adapter(retries=2):
+    return HTTPAdapter(max_retries=retries)
+
+
 def _http_method(url, method, *args, **kwargs):
     assert method in ['get', 'post', 'delete', 'put']
-    response = getattr(requests, method)(ic(url), *ic(args), **ic(kwargs))
+    s = requests.Session()
+    a = __http_adapter()
+    s.mount('http://', a)
+    s.mount('https://', a)
+    response = getattr(s, method)(ic(url), *ic(args), **ic(kwargs))
     check_http_response(response)
     return response
 
