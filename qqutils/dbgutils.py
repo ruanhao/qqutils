@@ -3,8 +3,24 @@ import traceback
 import logging
 import sys
 from functools import wraps
+from attr import define
+import time
 
 _logger = logging.getLogger(__name__)
+
+
+@define
+class Timer:
+    msg: str
+    start: float = 0.0
+    end: float = 0.0
+
+    def __enter__(self):
+        self.start = time.perf_counter()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.end = time.perf_counter()
+        print(f"[Timer:{self.msg}] {self.end - self.start:.02f}s")
 
 
 def assert_that(condition_to_fulfill, msg):
@@ -40,3 +56,20 @@ def debug_timing(f):
             print(f'⏱ {stopwatch} |> {f.__module__}.{f.__name__}({all_args})', file=sys.stderr)
         return result
     return wrap
+
+
+@debug_timing
+def _sleep(seconds):
+    time.sleep(seconds)
+
+
+def _test():
+    with Timer("Sleep 1s"):
+        time.sleep(1)
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    _sleep(1)
+
+
+if __name__ == '__main__':
+    _test()

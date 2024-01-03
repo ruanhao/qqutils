@@ -1,5 +1,6 @@
 from hprint import hprint
 from .threadutils import *
+from .inspectutils import *
 from .commutils import *
 from .osutils import *
 from .logutils import *
@@ -102,4 +103,7 @@ __all__ = [
 
     # urlutils
     'get_param',
+
+    # inspectutils
+    'get_source',
 ]
