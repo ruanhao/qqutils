@@ -34,9 +34,10 @@ def simple_timing(f):
     @wraps(f)
     def wrap(*args, **kw):
         stopwatch = Stopwatch(2)
-        result = f(*args, **kw)
-        print(f'Time: {stopwatch}', file=sys.stderr)
-        return result
+        try:
+            return f(*args, **kw)
+        finally:
+            print(f'Time: {stopwatch}', file=sys.stderr)
     return wrap
 
 

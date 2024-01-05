@@ -1,4 +1,5 @@
 from hprint import hprint
+from .sqliteutils import *
 from .threadutils import *
 from .inspectutils import *
 from .commutils import *
@@ -106,4 +107,15 @@ __all__ = [
 
     # inspectutils
     'get_source',
+
+    # sqliteutils
+    'sqlite3_connect',
+    'sqlite3_cursor',
+    'sqlite3_execute',
+    'sqlite3_query',
+    'sqlite3_tables',
+    'sqlite3_select_all',
+    'sqlite3_dump',
+    'sqlite3_get',
+    'sqlite3_put',
 ]
