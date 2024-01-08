@@ -236,3 +236,13 @@ def modify_extension(filename: str, extension: str) -> str:
     if extension.startswith('.'):
         return f"{filename}{extension}"
     return f"{filename}.{extension}"
+
+
+def from_path_str(path_str: str, default=None, logger=_logger) -> Path:
+    if not path_str:
+        return default
+    path = Path(path_str)
+    if not path.exists():
+        logger.error(f"Path does not exist: {path_str}")
+        return default
+    return path

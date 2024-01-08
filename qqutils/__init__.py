@@ -40,6 +40,7 @@ __all__ = [
     'sneaky',
 
     # netutils
+    'download',
     'check_http_response',
     'http_get',
     'http_post',
@@ -92,6 +93,8 @@ __all__ = [
     'pause',
     'add_suffix',
     'modify_extension',
+    'from_path_str',
+    'backup',                   # backup a file
 
     # funcutils
     'cached',
@@ -118,4 +121,6 @@ __all__ = [
     'sqlite3_dump',
     'sqlite3_get',
     'sqlite3_put',
+    'sqlite3_jget',
+    'sqlite3_jput',
 ]

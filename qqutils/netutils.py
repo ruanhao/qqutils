@@ -1,19 +1,20 @@
-import requests
-from functools import partial, lru_cache
+import os
 import sys
+import ssl
 import json
 import socket
-import ssl
 import select
-import os
-from .funcutils import cached
-from .logutils import pdebug, pinfo, perror, sneaky
-from .threadutils import submit_thread
-from .osutils import from_module
 import logging
-from contextlib import contextmanager
+import requests
 from icecream import ic
+from pathlib import Path
+from .funcutils import cached
+from .osutils import from_module
+from contextlib import contextmanager
+from .threadutils import submit_thread
+from functools import partial, lru_cache
 from requests.adapters import HTTPAdapter
+from .logutils import pdebug, pinfo, perror, sneaky
 
 logger = logging.getLogger(__name__)
 
@@ -364,3 +365,23 @@ def is_port_in_use(port: int) -> bool:
     import socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
+
+
+def download(url: str, path: Path, chunk_size: int = 1024):
+    r = requests.get(url, stream=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('wb') as f:
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if chunk:
+                f.write(chunk)
+
+
+def backup(path: Path, suffix: str = '.bak', force: bool = False):
+    if not path.exists():
+        return
+    bak_path = path.with_suffix(suffix)
+    if bak_path.exists() and not force:
+        return
+    with path.open('rb') as source:
+        with bak_path.open('wb') as target:
+            target.write(source.read())
