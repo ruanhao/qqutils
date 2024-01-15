@@ -4,6 +4,7 @@ click
 stopwatch.py
 python-dateutil
 attrs
-pycrypto
+pycryptodome
+Crypto
 # bcrypt
 # cryptography
