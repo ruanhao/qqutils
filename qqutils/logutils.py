@@ -7,6 +7,7 @@ from datetime import datetime
 import inspect
 import traceback
 import sys
+import click
 
 _logger = logging.getLogger(__name__)
 
@@ -108,11 +109,11 @@ def pwarning(msg):
         print(msg, file=sys.stderr)
 
 
-def pdebug(msg):
+def pdebug(msg, stderr=False):
     logger = _get_logger()
     logger.debug(msg)
     if logger.isEnabledFor(logging.DEBUG):
-        print(msg)
+        click.echo(msg, err=stderr)
 
 
 def install_print_with_flush():

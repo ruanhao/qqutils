@@ -6,7 +6,8 @@ import socket
 import select
 import logging
 import requests
-from icecream import ic
+import pickle
+import base64
 from pathlib import Path
 from .funcutils import cached
 from .osutils import from_module
@@ -35,13 +36,13 @@ def __http_adapter(retries=2):
     return HTTPAdapter(max_retries=retries)
 
 
-def _http_method(url, method, *args, **kwargs):
+def _http_method(url, method, session=None, *args, **kwargs):
     assert method in ['get', 'post', 'delete', 'put']
-    s = requests.Session()
-    a = __http_adapter()
-    s.mount('http://', a)
-    s.mount('https://', a)
-    response = getattr(s, method)(ic(url), *ic(args), **ic(kwargs))
+    s = session or requests.Session()
+    s.mount('http://', __http_adapter())
+    s.mount('https://', __http_adapter())
+    response = getattr(s, method)(url, *args, **kwargs)
+    response.encoding = response.apparent_encoding
     check_http_response(response)
     return response
 
@@ -50,6 +51,35 @@ http_get = partial(_http_method, method='get')
 http_post = partial(_http_method, method='post')
 http_put = partial(_http_method, method='put')
 http_delete = partial(_http_method, method='delete')
+http_patch = partial(_http_method, method='patch')
+
+
+def http_session_get(session, url, *args, **kwargs):
+    return _http_method(url, 'get', session, *args, **kwargs)
+
+
+def http_session_post(session, url, *args, **kwargs):
+    return _http_method(url, 'post', session, *args, **kwargs)
+
+
+def http_session_put(session, url, *args, **kwargs):
+    return _http_method(url, 'put', session, *args, **kwargs)
+
+
+def http_session_delete(session, url, *args, **kwargs):
+    return _http_method(url, 'delete', session, *args, **kwargs)
+
+
+def http_session_patch(session, url, *args, **kwargs):
+    return _http_method(url, 'patch', session, *args, **kwargs)
+
+
+def encode_session_base64(session: requests.Session) -> str:
+    return base64.b64encode(pickle.dumps(session)).decode()
+
+
+def decode_session_base64(text: str) -> requests.Session:
+    return pickle.loads(base64.b64decode(text.encode()))
 
 
 def is_readable(sock: socket.socket) -> bool:

@@ -10,8 +10,8 @@ from .funcutils import *
 from .dateutils import *
 from .dbgutils import *
 from .dsutils import *
-from .dsutils import *
 from .urlutils import *
+from .cryptutils import *
 
 CLICK_CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -46,6 +46,14 @@ __all__ = [
     'http_post',
     'http_put',
     'http_delete',
+    'http_patch',
+    'http_session_get',
+    'http_session_post',
+    'http_session_put',
+    'http_session_delete',
+    'http_session_patch',
+    'encode_session_base64',
+    'decode_session_base64',
     'sockinfo',
     'run_proxy',
     'sendall',
@@ -123,4 +131,8 @@ __all__ = [
     'sqlite3_put',
     'sqlite3_jget',
     'sqlite3_jput',
+
+    # cryptutils
+    'aes_encrypt',
+    'aes_decrypt',
 ]
