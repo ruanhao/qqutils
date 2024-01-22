@@ -1,4 +1,5 @@
 from hprint import hprint
+from .stringutils import *
 from .sqliteutils import *
 from .threadutils import *
 from .inspectutils import *
@@ -81,6 +82,7 @@ __all__ = [
     'pinfo',
     'pwarning',
     'perror',
+    'pstderr',
     'configure_logging',
     'install_print_with_flush',
     'LoggerAdapter',
@@ -135,4 +137,16 @@ __all__ = [
     # cryptutils
     'aes_encrypt',
     'aes_decrypt',
+
+    # stringutils
+    'style',
+    'green',
+    'red',
+    'yellow',
+    'blue',
+    'cyan',
+    'magenta',
+    'bold',
+    'underline',
+
 ]

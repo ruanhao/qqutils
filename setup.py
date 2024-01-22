@@ -6,7 +6,10 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 install_requires = (this_directory / 'requirements.txt').read_text().splitlines()
 
-version = '0.0.30'
+
+__version__ = None
+
+exec(open("qqutils/version.py").read())
 
 config = {
     'name': 'qqutils',
@@ -18,8 +21,11 @@ config = {
     'author' : 'Hao Ruan',
     'author_email': 'ruanhao1116@gmail.com',
     'keywords': ['utils'],
-    'version': version,
+    'version': __version__,
     'packages': ['qqutils'],
+    'package_data': {
+        'qqutils': ['*.pem'],
+    },
     'install_requires': install_requires,
     'python_requires': ">=3.7, <4",
     'setup_requires': ['wheel'],

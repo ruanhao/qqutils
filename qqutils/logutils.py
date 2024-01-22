@@ -84,7 +84,7 @@ def _get_logger():
 
 def pfatal(msg):
     _get_logger().critical(msg)
-    print(msg, file=sys.stderr)
+    click.echo(msg, err=True)
     exit(1)
 
 
@@ -92,21 +92,21 @@ def pinfo(msg):
     logger = _get_logger()
     logger.info(msg)
     if logger.isEnabledFor(logging.INFO):
-        print(msg)
+        click.echo(msg)
 
 
 def perror(msg):
     logger = _get_logger()
     logger.error(msg)
     if logger.isEnabledFor(logging.ERROR):
-        print(msg, file=sys.stderr)
+        click.echo(msg, err=True)
 
 
 def pwarning(msg):
     logger = _get_logger()
     logger.warning(msg)
     if logger.isEnabledFor(logging.WARNING):
-        print(msg, file=sys.stderr)
+        click.echo(msg, err=True)
 
 
 def pdebug(msg, stderr=False):
@@ -114,6 +114,10 @@ def pdebug(msg, stderr=False):
     logger.debug(msg)
     if logger.isEnabledFor(logging.DEBUG):
         click.echo(msg, err=stderr)
+
+
+def pstderr(msg):
+    click.echo(msg, err=True)
 
 
 def install_print_with_flush():
