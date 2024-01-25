@@ -32,7 +32,7 @@ def setup_icecream(verbose=False):
         def __ic(*args):
             nonlocal verbose
             if verbose:
-                print(f'{datetime.now()}|>', *args)
+                print(f'{datetime.now()}|>', *args, flush=True, file=sys.stderr)
 
             if not args:  # E.g. ic().
                 return None
@@ -45,7 +45,6 @@ def setup_icecream(verbose=False):
 
 def configure_logging(name, level=None, setup_ic=True):
     level = level or logging.INFO
-    # install_print_with_flush()
 
     logging.basicConfig(
         handlers=[
@@ -153,7 +152,7 @@ def sneaky(logger: logging.Logger = None, console: bool = False):
                 if logger:
                     logger.exception(emsg)
                 if console:
-                    print(emsg, traceback.format_exc(), file=sys.stderr, sep=os.linesep)
+                    print(emsg, traceback.format_exc(), file=sys.stderr, sep=os.linesep, flush=True)
         return wrapper
     return decorate
 

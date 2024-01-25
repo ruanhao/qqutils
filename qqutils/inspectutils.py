@@ -1,4 +1,5 @@
 import inspect
+from typing import List
 from attrs import define, field, validators, setters, asdict, astuple
 
 
@@ -28,7 +29,7 @@ Order of Execution
     email: str = field(converter=str.lower, default='', order=False)
     age: int = field(default=0, validator=validators.instance_of(int), order=int)
     password: str = field(default='', validator=validators.instance_of(str), order=False, repr=lambda value: '*' * len(value))
-    comments: list[str] = field(factory=list, order=False, hash=False)
+    comments: List[str] = field(factory=list, order=False, hash=False)
 
     def __attrs_post_init__(self):
         """https://www.attrs.org/en/stable/init.html#hooking-yourself-into-initialization"""
