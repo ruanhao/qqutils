@@ -1,4 +1,5 @@
 import itertools
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -14,6 +15,17 @@ _POOL = create_thread_pool()
 
 def submit_thread(func, *args, **kwargs):
     return _POOL.submit(func, *args, **kwargs)
+
+
+def submit_daemon_thread(func, *args, **kwargs) -> threading.Thread:
+    func_name = func.__name__
+
+    def _worker():
+        func(*args, **kwargs)
+
+    t = threading.Thread(target=_worker, name=f'{func_name}-daemon-{next(_counter)}', daemon=True)
+    t.start()
+    return t
 
 
 def submit_thread_and_wait(func, *args, **kwargs):

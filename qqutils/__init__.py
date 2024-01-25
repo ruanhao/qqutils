@@ -24,6 +24,7 @@ __all__ = [
 
     # threadutils
     'create_thread_pool',
+    'submit_daemon_thread',
     'submit_thread',
     'submit_thread_and_wait',
     'submit_thread_and_wait_with_timeout',
