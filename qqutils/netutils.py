@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def check_http_response(response, need_raise=True):
     if response.ok:
         return
-    if 'application/json' in response.headers.get('content-type'):
+    if 'application/json' in (response.headers.get('content-type') or ''):
         print(json.dumps(response.json(), indent=4), file=sys.stderr)
     else:
         print(response.text, file=sys.stderr)
