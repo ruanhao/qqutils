@@ -105,6 +105,7 @@ __all__ = [
     'add_suffix',
     'modify_extension',
     'from_path_str',
+    'under_home',
     'backup',                   # backup a file
 
     # funcutils

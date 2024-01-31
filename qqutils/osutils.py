@@ -239,10 +239,32 @@ def modify_extension(filename: str, extension: str) -> str:
 
 
 def from_path_str(path_str: str, default=None, logger=_logger) -> Path:
+    """
+    >>> from_path_str('~/a/b/c.txt')
+    PosixPath('/Users/haoru/a/b/c.txt')
+    >>>
+    """
     if not path_str:
         return default
-    path = Path(path_str)
+    path = Path(path_str).expanduser().resolve()
     if not path.exists():
         logger.error(f"Path does not exist: {path_str}")
         return default
     return path
+
+
+def under_home(*path: str, all_dir=False, create=False) -> Path:
+    """
+    >>> under_home('a', 'b', 'c.txt')
+    PosixPath('/Users/haoru/a/b/c.txt')
+    >>>
+    """
+    p = Path.home().joinpath(*path).expanduser().resolve()
+    if not create:
+        return p
+    if all_dir:
+        p.mkdir(parents=True, exist_ok=True)
+    else:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.touch()
+    return p
