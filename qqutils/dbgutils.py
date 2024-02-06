@@ -54,7 +54,7 @@ def debug_timing(f):
             args = [repr(arg) for arg in args]
             kws = [f"{k}={repr(v)}" for k, v in kw.items()]
             all_args = ', '.join(args + kws)
-            print(f'⏱ {stopwatch} |> {f.__module__}.{f.__name__}({all_args})', file=sys.stderr)
+            print(f'⏱ {stopwatch} |> {f.__module__}.{f.__name__}({all_args})', file=sys.stderr, flush=True)
         return result
     return wrap
 

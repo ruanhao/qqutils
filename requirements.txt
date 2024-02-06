@@ -6,5 +6,6 @@ python-dateutil
 attrs
 pycryptodome
 Crypto
+tqdm
 # bcrypt
 # cryptography

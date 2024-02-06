@@ -1,5 +1,5 @@
-import os
 import sys
+import os
 import ssl
 import json
 import socket
@@ -9,13 +9,16 @@ import requests
 import pickle
 import base64
 from pathlib import Path
-from .funcutils import cached
-from .osutils import from_module
+from qqutils.funcutils import cached
+from qqutils.osutils import from_module
 from contextlib import contextmanager
-from .threadutils import submit_thread
+from qqutils.threadutils import submit_thread
 from functools import partial, lru_cache
 from requests.adapters import HTTPAdapter
-from .logutils import pdebug, pinfo, perror, sneaky
+from qqutils.logutils import pdebug, pinfo, perror, sneaky
+from tqdm import tqdm
+from tqdm.utils import CallbackIOWrapper
+from requests_toolbelt.multipart import encoder
 
 logger = logging.getLogger(__name__)
 
@@ -397,13 +400,60 @@ def is_port_in_use(port: int) -> bool:
         return s.connect_ex(('localhost', port)) == 0
 
 
-def download(url: str, path: Path, chunk_size: int = 1024):
+def upload_multipart(url: str, path: Path, name='file', progress: bool = False, session: requests.Session = None):
+    file_size = path.stat().st_size
+    filename = path.name
+    headers0 = {
+        # 'Accept-Language': 'zh-CN,zh;q=0.9',  # https://www.cnblogs.com/liuxiaoming123/p/15315868.html
+    }
+    session = session or requests.Session()
+    if not progress:
+        with path.open("rb") as f:
+            multipart_encoder = encoder.MultipartEncoder(
+                fields={
+                    # name: (filename, f, 'application/macbinary')
+                    name: (filename, f)
+                },
+            )
+            headers = {
+                'Content-Type': multipart_encoder.content_type,
+                **headers0,
+            }
+            return session.post(url, data=multipart_encoder, headers=headers)
+
+    with path.open("rb") as f:
+        with tqdm(total=file_size, unit="B", unit_scale=True, unit_divisor=1024) as t:
+            wrapped_file = CallbackIOWrapper(t.update, f, "read")
+            multipart_encoder = encoder.MultipartEncoder(
+                fields={
+                    # name: (filename, wrapped_file, 'application/macbinary')
+                    name: (filename, wrapped_file)
+                },
+            )
+            monitor = encoder.MultipartEncoderMonitor(multipart_encoder)
+            headers = {
+                'Content-Type': multipart_encoder.content_type,
+                **headers0,
+            }
+            return session.post(url, data=monitor, headers=headers)
+
+
+def download(url: str, path: Path, chunk_size: int = 1024, progress: bool = False):
     r = requests.get(url, stream=True)
+    total = int(r.headers.get('content-length', 0))
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('wb') as f:
-        for chunk in r.iter_content(chunk_size=chunk_size):
-            if chunk:
-                f.write(chunk)
+    if not progress:
+        with path.open('wb') as f:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    f.write(chunk)
+        return
+    with tqdm(total=total, unit='B', unit_scale=True, unit_divisor=1024) as bar:
+        with path.open('wb') as f:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    f.write(chunk)
+                    bar.update(len(chunk))
 
 
 def backup(path: Path, suffix: str = '.bak', force: bool = False):
@@ -415,3 +465,14 @@ def backup(path: Path, suffix: str = '.bak', force: bool = False):
     with path.open('rb') as source:
         with bak_path.open('wb') as target:
             target.write(source.read())
+
+
+def _test_upload_multipart():
+    # r = upload_multipart("https://httpbin.org/post", Path("dbgutils.py"))
+    r = upload_multipart("http://localhost:8080/post", Path("dbgutils.py"))
+    assert r.ok, r.text
+    print(r.text)
+
+
+if __name__ == '__main__':
+    _test_upload_multipart()

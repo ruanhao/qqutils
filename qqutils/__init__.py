@@ -43,6 +43,7 @@ __all__ = [
 
     # netutils
     'download',
+    'upload_multipart',
     'check_http_response',
     'http_get',
     'http_post',
