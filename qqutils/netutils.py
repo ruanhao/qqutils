@@ -1,4 +1,6 @@
 import sys
+from typing import Tuple, Callable
+import asyncio
 import os
 import ssl
 import json
@@ -12,13 +14,14 @@ from pathlib import Path
 from qqutils.funcutils import cached
 from qqutils.osutils import from_module
 from contextlib import contextmanager
-from qqutils.threadutils import submit_thread
+from qqutils.threadutils import submit_daemon_thread
 from functools import partial, lru_cache
 from requests.adapters import HTTPAdapter
 from qqutils.logutils import pdebug, pinfo, perror, sneaky
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 from requests_toolbelt.multipart import encoder
+from attrs import define, field
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +217,10 @@ def _transfer(src, dst, direction, handle):
 
 @cached
 def _c_context():
-    return ssl._create_unverified_context()
+    ssl_context = ssl._create_unverified_context()
+    ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+    ssl_context.set_ciphers("ALL")
+    return ssl_context
 
 
 @cached
@@ -224,6 +230,108 @@ def _s_context():
     keyfile = from_module('key-qqutils.pem')
     s_context.load_cert_chain(certfile, keyfile)
     return s_context
+
+
+@define(slots=True)
+class _Socket:
+    peername: Tuple[str, int] = field(default=None)
+
+    def getpeername(self):
+        return self.peername
+
+
+@define(slots=True, kw_only=True)
+class _ProxyServer:
+    host: str = field(default='localhost')
+    port: int = field(default=8080)
+    remote_host: str = field(default='localhost')
+    remote_port: int = field(default=80)
+    certfile: str = field(default=None)
+    keyfile: str = field(default=None)
+    tls: bool = field(default=False)  # if True, proxy client will connect to real server with TLS
+    handle: Callable = field(default=_handle)
+
+    def ssl_context(self, certfile, keyfile):
+        if all((certfile, keyfile)):
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.load_cert_chain(certfile, keyfile)
+            return context
+        elif any((certfile, keyfile)):
+            raise ValueError("Both certfile and keyfile are required")
+        else:
+            return None
+
+    async def transfer(
+            self,
+            reader: asyncio.streams.StreamReader,
+            writer: asyncio.streams.StreamWriter,
+            source_writer: asyncio.streams.StreamWriter,
+            direction=False, handle=_handle
+    ):
+        src_address, src_port = source_writer.get_extra_info('peername')
+        src_peer_address, src_peer_port = source_writer.get_extra_info('sockname')
+
+        dst_address, dst_port = writer.get_extra_info('sockname')
+        dst_peer_address, dst_peer_port = writer.get_extra_info('peername')
+
+        try:
+            while True:
+                buffer = await reader.read(4096)
+                if len(buffer) > 0:
+                    if direction:
+                        pdebug(f"[>> {len(buffer)} bytes] {src_peer_address, src_peer_port} >> {dst_address, dst_port}")
+                    else:
+                        pdebug(f"[<< {len(buffer)} bytes] {dst_peer_address, dst_peer_port} << {src_address, src_port}")
+                    src = _Socket((src_address, src_port))
+                    dst = _Socket((dst_peer_address, dst_peer_port))
+                    writer.write(handle(buffer, direction, src, dst))
+                    await writer.drain()
+                else:    # EOF
+                    return
+        except Exception:
+            return
+        finally:
+            if direction:
+                pdebug(f"[Inactive] {src_peer_address, src_peer_port}")
+            else:
+                pdebug(f"[Inactive] {src_address, src_port}")
+            writer.close()
+
+    async def handle_incoming_connection(self, reader: asyncio.streams.StreamReader, writer: asyncio.streams.StreamWriter):
+        address = writer.get_extra_info('peername')
+        logger.info(f"New connection from {address}")
+        p_reader, p_writer = await asyncio.open_connection(self.remote_host, self.remote_port, ssl=_c_context() if self.tls else None)
+        asyncio.create_task(self.transfer(reader, p_writer, writer, True, self.handle))
+        asyncio.create_task(self.transfer(p_reader, writer, p_writer, False, self.handle))
+
+    async def run(self):
+        server = await asyncio.start_server(
+            self.handle_incoming_connection,
+            self.host, self.port,
+            reuse_address=True,
+            ssl=self.ssl_context(self.certfile, self.keyfile)
+        )
+        tls = all((self.certfile, self.keyfile))
+        logger.info(f"Server started at {self.host}:{self.port} ({'secure' if tls else 'plain'}) ...")
+        async with server:
+            await server.serve_forever()
+
+
+def run_proxy_async(
+        local_host, local_port,
+        remote_host, remote_port,
+        handle=_handle,
+        tls=False,              # client side
+        server_keyfile=None, server_certfile=None,  # server side
+):
+
+    asyncio.run(_ProxyServer(
+        host=local_host, port=local_port,
+        remote_host=remote_host, remote_port=remote_port,
+        certfile=server_certfile, keyfile=server_keyfile,
+        tls=tls,
+        handle=handle,
+    ).run())
 
 
 def run_proxy(
@@ -252,8 +360,8 @@ def run_proxy(
                 dst_socket = _c_context().wrap_socket(dst_socket, server_hostname=remote_host)
             dst_socket.connect((remote_host, remote_port))
             pdebug(f"[Established ] {src_address} <=> {src_socket.getsockname()} <-> {socket_description(dst_socket)}")
-            submit_thread(transfer, dst_socket, src_socket, False)
-            submit_thread(transfer, src_socket, dst_socket, True)
+            submit_daemon_thread(transfer, dst_socket, src_socket, False)
+            submit_daemon_thread(transfer, src_socket, dst_socket, True)
         except Exception as e:
             perror(repr(e))
 

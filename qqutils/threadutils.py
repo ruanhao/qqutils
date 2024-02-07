@@ -1,6 +1,7 @@
 import itertools
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
 
 _counter = itertools.count()
@@ -18,7 +19,10 @@ def submit_thread(func, *args, **kwargs):
 
 
 def submit_daemon_thread(func, *args, **kwargs) -> threading.Thread:
-    func_name = func.__name__
+    if isinstance(func, partial):
+        func_name = func.func.__name__
+    else:
+        func_name = func.__name__
 
     def _worker():
         func(*args, **kwargs)
