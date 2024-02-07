@@ -268,11 +268,15 @@ class _ProxyServer:
             source_writer: asyncio.streams.StreamWriter,
             direction=False, handle=_handle
     ):
-        src_address, src_port = source_writer.get_extra_info('peername')
-        src_peer_address, src_peer_port = source_writer.get_extra_info('sockname')
+        spname = source_writer.get_extra_info('peername')
+        src_address, src_port = spname[0], spname[1]
+        ssockname = source_writer.get_extra_info('sockname')
+        src_peer_address, src_peer_port = ssockname[0], ssockname[1]
 
-        dst_address, dst_port = writer.get_extra_info('sockname')
-        dst_peer_address, dst_peer_port = writer.get_extra_info('peername')
+        dsockname = writer.get_extra_info('sockname')
+        dst_address, dst_port = dsockname[0], dsockname[1]
+        dpname = writer.get_extra_info('peername')
+        dst_peer_address, dst_peer_port = dpname[0], dpname[1]
 
         try:
             while True:
