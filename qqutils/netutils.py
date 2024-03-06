@@ -108,8 +108,8 @@ def socket_description(sock):
     fileno = sock.fileno()
     s_addr = None
     try:
-        s_addr, s_port = sock.getsockname()
-        d_addr, d_port = sock.getpeername()
+        s_addr, s_port = sock.getsockname()[:2]
+        d_addr, d_port = sock.getpeername()[:2]
         return f"[id: {sock_id}, fd: {fileno}, L:/{s_addr}:{s_port} - R:/{d_addr}:{d_port}]"
         pass
     except Exception:
@@ -202,6 +202,7 @@ def _transfer(src, dst, direction, handle):
                     pdebug(f"[<< {len(buffer)} bytes] {dst_peer_address, dst_peer_port} << {src_address, src_port}")
                 sendall(dst, handle(buffer, direction, src, dst))
             else:    # EOF
+                handle(buffer, direction, src, dst)
                 return
     except socket.error:
         return
@@ -291,6 +292,7 @@ class _ProxyServer:
                     writer.write(handle(buffer, direction, src, dst))
                     await writer.drain()
                 else:    # EOF
+                    handle(buffer, direction, src, dst)
                     return
         except Exception:
             return

@@ -46,8 +46,8 @@ def pretty_duration(seconds: int) -> str:
         ('W', 60 * 60 * 24 * 7),
         ('D', 60 * 60 * 24),
         ('H', 60 * 60),
-        ('M', 60),
-        ('S', 1)
+        ('m', 60),
+        ('s', 1)
     )
     if seconds == 0:
         return '0S'

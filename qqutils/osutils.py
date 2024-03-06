@@ -268,3 +268,11 @@ def under_home(*path: str, all_dir=False, create=False) -> Path:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.touch()
     return p
+
+
+def create_temp_file(filename: str) -> str:
+    temp_dir = tempfile.mkdtemp()
+    file_path = os.path.join(temp_dir, filename)
+    with open(file_path, 'w'):
+        pass
+    return file_path
