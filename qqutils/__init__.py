@@ -151,5 +151,6 @@ __all__ = [
     'magenta',
     'bold',
     'underline',
+    'color_cycler',
 
 ]
