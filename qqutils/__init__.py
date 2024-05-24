@@ -96,7 +96,9 @@ __all__ = [
     'as_root',
     'is_root',
     'switch_dir',
-    'tmpdir',
+    'tmpdir',                   # deprecated
+    'temp_dir',
+    'temp_file',
     'from_cwd',
     'from_module',
     'write_to_clipboard',

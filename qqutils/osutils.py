@@ -167,8 +167,39 @@ def switch_dir(dir=None):
         os.chdir(orig_cwd)
 
 
+# deprecated
 def tmpdir():
     return tempfile.gettempdir()
+
+
+# deprecated
+def tmpfile(filename, create_tempdir=False) -> Path:
+    tmp_dir_path = tmpdir(create_tempdir)
+    tmp_dir_path.mkdir(parents=True, exist_ok=True)
+    return tmp_dir_path / filename
+
+
+# deprecated
+def create_temp_file(filename: str) -> str:
+    temp_dir = tempfile.mkdtemp()
+    file_path = os.path.join(temp_dir, filename)
+    with open(file_path, 'w'):
+        pass
+    return file_path
+
+
+def temp_dir(mkdtemp=False) -> Path:
+    d = tempfile.mkdtemp() if mkdtemp else tempfile.gettempdir()
+    dpath = Path(d)
+    dpath.mkdir(parents=True, exist_ok=True)
+    return dpath
+
+
+def temp_file(filename, mkdtemp=False, touch=True) -> Path:
+    p = temp_dir(mkdtemp) / filename
+    if touch:
+        p.touch()
+    return p
 
 
 def from_cwd(*args):
@@ -268,11 +299,3 @@ def under_home(*path: str, all_dir=False, create=False) -> Path:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.touch()
     return p
-
-
-def create_temp_file(filename: str) -> str:
-    temp_dir = tempfile.mkdtemp()
-    file_path = os.path.join(temp_dir, filename)
-    with open(file_path, 'w'):
-        pass
-    return file_path
