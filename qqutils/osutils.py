@@ -299,3 +299,13 @@ def under_home(*path: str, all_dir=False, create=False) -> Path:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.touch()
     return p
+
+
+# >>> normalize_path('~/a/b/../c/../d/e')
+# '/home/paul/a/d/e'
+def normalize_path(path) -> str:
+    p = Path(os.path.normpath(path))
+    if p.as_posix().startswith('~'):
+        return p.expanduser().as_posix()
+    else:
+        return p.as_posix()

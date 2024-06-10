@@ -47,6 +47,7 @@ def _http_method(url, method, session=None, *args, **kwargs):
     s = session or requests.Session()
     s.mount('http://', __http_adapter())
     s.mount('https://', __http_adapter())
+    s.verify = False
     response = getattr(s, method)(url, *args, **kwargs)
     response.encoding = response.apparent_encoding
     check_http_response(response)

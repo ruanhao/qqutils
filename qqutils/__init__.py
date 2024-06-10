@@ -110,6 +110,7 @@ __all__ = [
     'from_path_str',
     'under_home',
     'backup',                   # backup a file
+    'normalize_path',
 
     # funcutils
     'cached',
@@ -154,5 +155,6 @@ __all__ = [
     'bold',
     'underline',
     'color_cycler',
+    'format_bytes',
 
 ]

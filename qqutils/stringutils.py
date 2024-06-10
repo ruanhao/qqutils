@@ -48,3 +48,15 @@ def color_cycler(bold=False, underline=False, bright=False) -> cycle:
 
 def underline(text):
     return style(text, None, underline=True)
+
+
+def format_bytes(size: int, scale: int = 1) -> (float, str):
+    size = int(size)
+    power = 2**10
+    n = 0
+    power_labels = {0: 'B', 1: 'K', 2: 'M', 3: 'G', 4: 'T'}
+    while size > power:
+        size /= power
+        size = round(size, scale)
+        n += 1
+    return size, power_labels[n]
