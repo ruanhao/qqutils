@@ -26,6 +26,11 @@ from attrs import define, field
 logger = logging.getLogger(__name__)
 
 
+def disable_urllib3_warnings():
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+
 def check_http_response(response, need_raise=True):
     if response.ok:
         return

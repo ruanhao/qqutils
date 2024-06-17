@@ -42,6 +42,7 @@ __all__ = [
     'sneaky',
 
     # netutils
+    'disable_urllib3_warnings',
     'download',
     'upload_multipart',
     'check_http_response',
