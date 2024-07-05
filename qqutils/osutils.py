@@ -252,9 +252,30 @@ def confirm(abort=False):
     return click.confirm('Do you want to continue?', abort=abort)
 
 
-def prompt(msg='Please enter:', type=str, default=None, prompt_suffix=': '):
-    value = click.prompt(msg, type=type, default=default, prompt_suffix=prompt_suffix)
-    return value
+def prompt(msg='Please enter', type=str, default=None, prompt_suffix=': ', hide=False):
+    if hide:
+        import pwinput
+        while True:
+            if default is not None:
+                _prompt = f"{msg} [{default}]{prompt_suffix}"
+            else:
+                _prompt = msg + prompt_suffix
+            ret0 = pwinput.pwinput(prompt=_prompt)
+            if default is not None and not ret0:
+                ret = default
+            else:
+                ret = ret0
+            try:
+                return type(ret)
+            except ValueError:
+                print(f"Error: '{ret}' is not a valid {type}.")
+    return click.prompt(
+        msg,
+        type=type,
+        default=default,
+        show_default=True,
+        prompt_suffix=prompt_suffix,
+    )
 
 
 def add_suffix(filename: str, suffix: str) -> str:
