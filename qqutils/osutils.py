@@ -330,3 +330,7 @@ def normalize_path(path) -> str:
         return p.expanduser().as_posix()
     else:
         return p.as_posix()
+
+
+def random_string(length=8):
+    return os.urandom(length // 2).hex()

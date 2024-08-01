@@ -112,6 +112,7 @@ __all__ = [
     'under_home',
     'backup',                   # backup a file
     'normalize_path',
+    'random_string',
 
     # funcutils
     'cached',
