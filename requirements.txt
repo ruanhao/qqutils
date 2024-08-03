@@ -8,5 +8,6 @@ pycryptodome
 Crypto
 tqdm
 pwinput
-# bcrypt
+bcrypt
+requests_toolbelt
 # cryptography
