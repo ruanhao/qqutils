@@ -155,6 +155,7 @@ __all__ = [
     'blue',
     'cyan',
     'magenta',
+    'bright_black',
     'bold',
     'underline',
     'color_cycler',

@@ -14,6 +14,10 @@ def green(text, bold=False, underline=False):
     return style(text, "green", bold=bold, underline=underline)
 
 
+def bright_black(text, bold=False, underline=False):
+    return style(text, "bright_black", bold=bold, underline=underline)
+
+
 def red(text, bold=False, underline=False):
     return style(text, "red", bold=bold, underline=underline)
 
