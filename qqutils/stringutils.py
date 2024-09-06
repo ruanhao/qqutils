@@ -10,6 +10,10 @@ def style(text, fg, bold=False, underline=False):
     return click.style(text, fg=fg, bold=bold, underline=underline)
 
 
+def white(text, bold=False, underline=False):
+    return style(text, "white", bold=bold, underline=underline)
+
+
 def green(text, bold=False, underline=False):
     return style(text, "green", bold=bold, underline=underline)
 

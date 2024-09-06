@@ -1,10 +1,13 @@
 from stopwatch import Stopwatch
+from contextlib import contextmanager
 import traceback
 import logging
 import sys
 from functools import wraps
 from attr import define
 import time
+from typing import Callable
+import click
 
 _logger = logging.getLogger(__name__)
 
@@ -70,6 +73,22 @@ def _test():
     import logging
     logging.basicConfig(level=logging.DEBUG)
     _sleep(1)
+
+
+@contextmanager
+def time_measurer(msg: str = None, digits: int = 2) -> Callable[[], float]:
+    stopwatch = Stopwatch(digits)
+    duration = stopwatch.duration
+    yield lambda: round(duration, digits)
+    duration = stopwatch.duration
+    if msg:
+        if '{}' in msg:
+            msg = msg.format(f"{duration:.{digits}f}s")
+        else:
+            msg = f"{msg}({duration:.{digits}f}s)"
+    else:
+        msg = f">>> {duration:.{digits}f}s"
+    click.echo(msg, err=True)
 
 
 if __name__ == '__main__':

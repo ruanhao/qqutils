@@ -123,6 +123,7 @@ __all__ = [
     'assert_that',
     'simple_timing',
     'debug_timing',
+    'time_measurer',
 
     # urlutils
     'get_param',
@@ -149,6 +150,7 @@ __all__ = [
 
     # stringutils
     'style',
+    'white',
     'green',
     'red',
     'yellow',
