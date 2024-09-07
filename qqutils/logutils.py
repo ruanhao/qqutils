@@ -72,12 +72,14 @@ def configure_logging(name, level=None, setup_ic=True):
         setup_icecream(level == logging.DEBUG)
 
 
-def _get_logger():
-    frm = inspect.stack()[1]
-    mod = inspect.getmodule(frm[0])
-    for k, v in mod.__dict__.items():
-        if isinstance(v, logging.Logger):
-            return v
+def _get_logger(max_depth=8):
+    stacks = inspect.stack()
+    for i in range(1, min(len(stacks), max_depth)):
+        frm = stacks[i]
+        mod = inspect.getmodule(frm[0])
+        for k, v in mod.__dict__.items():
+            if isinstance(v, logging.Logger) and v is not _logger:
+                return v
     return _logger
 
 

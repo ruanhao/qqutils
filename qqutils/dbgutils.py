@@ -79,16 +79,10 @@ def _test():
 def time_measurer(msg: str = None, digits: int = 2) -> Callable[[], float]:
     stopwatch = Stopwatch(digits)
     duration = stopwatch.duration
+    click.echo(msg if msg else 'Running...', err=True, nl=False)
     yield lambda: round(duration, digits)
     duration = stopwatch.duration
-    if msg:
-        if '{}' in msg:
-            msg = msg.format(f"{duration:.{digits}f}s")
-        else:
-            msg = f"{msg}({duration:.{digits}f}s)"
-    else:
-        msg = f">>> {duration:.{digits}f}s"
-    click.echo(msg, err=True)
+    click.echo(f"({duration:.{digits}f}s)", err=True)
 
 
 if __name__ == '__main__':

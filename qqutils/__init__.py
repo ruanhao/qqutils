@@ -117,6 +117,7 @@ __all__ = [
     # funcutils
     'cached',
     'run_click_command',
+    'run_click_command_with_obj',
 
     # dbutils
     'setup_icecream',
