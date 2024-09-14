@@ -1,4 +1,5 @@
 from functools import wraps
+import warnings
 import typing
 import click
 
@@ -42,3 +43,22 @@ def cached(func):
             obj = func(*args, **kwargs)
         return obj
     return inner
+
+
+def deprecated(reason=None):
+
+    def __wrapper(func):
+
+        @wraps(func)
+        def __inner(*args, **kwargs):
+            warnings.simplefilter('always', UserWarning)  # turn off filter
+            warnings.warn(
+                f"DEPRECATED: {func.__name__}, {reason}" if reason else f"DEPRECATED: {func.__name__}",
+                category=UserWarning,
+                stacklevel=2
+            )
+            return func(*args, **kwargs)
+
+        return __inner
+
+    return __wrapper
