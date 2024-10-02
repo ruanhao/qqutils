@@ -163,5 +163,6 @@ __all__ = [
     'underline',
     'color_cycler',
     'format_bytes',
+    'print_markdown',
 
 ]

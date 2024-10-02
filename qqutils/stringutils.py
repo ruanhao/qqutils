@@ -2,6 +2,15 @@ import click
 import os
 from itertools import cycle
 from functools import partial
+from rich.console import Console
+from rich.markdown import Markdown
+from typing import Dict
+
+
+def print_markdown(text: str, **kwargs: Dict) -> None:
+    console = Console()
+    md = Markdown(text)
+    console.print(md, **kwargs)
 
 
 def style(text, fg, bold=False, underline=False):

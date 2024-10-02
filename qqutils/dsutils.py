@@ -37,7 +37,7 @@ def _chain_get(data, chain, default=None):
     return _get(result, attrs[-1], default)
 
 
-def pget(obj: Union[List, Dict], key: str, default: Any = 'n/a'):
+def pget(obj: Union[List, Dict], key: str, default: Any = None):
     try:
         return _chain_get(obj, key, default)
     except AssertionError as ae:
