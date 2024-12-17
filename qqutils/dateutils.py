@@ -29,11 +29,10 @@ def local_timestamp(tz: str = None, millis=False) -> int:
     """
     import pytz
     timezone_info = pytz.timezone(tz) if tz else timezone.utc
-    dt = datetime.now(timezone_info)
-    utc_time = dt.replace(tzinfo=timezone.utc)
+    ts = datetime.now(timezone_info).timestamp()
     if millis:
-        return int(utc_time.timestamp() * 1000)
-    return int(utc_time.timestamp())
+        return int(ts * 1000)
+    return int(ts)
 
 
 def datetimestr(utc_ts: int, fmt: str = "%m/%d/%Y %H:%M:%S", to_local: bool = True) -> str:
