@@ -23,6 +23,19 @@ def timestamp_seconds() -> int:
     return _timestamp(millis=False)
 
 
+def local_timestamp(tz: str = None, millis=False) -> int:
+    """Return the current local timestamp based on the timezone provided. If no timezone is provided, the local timezone is used.
+:param tz: The timezone to use in form like 'America/New_York'
+    """
+    import pytz
+    timezone_info = pytz.timezone(tz) if tz else timezone.utc
+    dt = datetime.now(timezone_info)
+    utc_time = dt.replace(tzinfo=timezone.utc)
+    if millis:
+        return int(utc_time.timestamp() * 1000)
+    return int(utc_time.timestamp())
+
+
 def datetimestr(utc_ts: int, fmt: str = "%m/%d/%Y %H:%M:%S", to_local: bool = True) -> str:
     if utc_ts > 253_402_210_800:
         date_time = datetime.utcfromtimestamp(utc_ts // 1000).replace(microsecond=utc_ts % 1000 * 1000)

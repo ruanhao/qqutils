@@ -78,6 +78,7 @@ __all__ = [
     'utc_to_local',
     'timestamp_seconds',
     'timestamp_millis',
+    'local_timestamp',
 
     # logutils
     'pfatal',
