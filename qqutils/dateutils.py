@@ -35,14 +35,16 @@ def local_timestamp(tz: str = None, millis=False) -> int:
     return int(ts)
 
 
-def datetimestr(utc_ts: int, fmt: str = "%m/%d/%Y %H:%M:%S", to_local: bool = True, tz_str: str = None) -> str:
+def datetimestr(utc_ts: int = -1, fmt: str = "%m/%d/%Y %H:%M:%S", to_local: bool = True, tz_str: str = None) -> str:
     """Convert a UTC timestamp to a formatted date string.
-    :param utc_ts: The UTC timestamp to convert
+    :param utc_ts: The UTC timestamp to convert, if -1, the current time is used
     :param fmt: The format to use for the date string
     :param to_local: Convert the UTC timestamp to local time
     :param tz_str: The timezone to use in form like 'America/New_York'
     """
     import pytz
+    if utc_ts == -1:
+        utc_ts = timestamp_seconds()
     if utc_ts > 253_402_210_800:
         date_time = datetime.utcfromtimestamp(utc_ts // 1000).replace(microsecond=utc_ts % 1000 * 1000)
     else:
