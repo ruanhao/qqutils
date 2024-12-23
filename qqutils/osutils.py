@@ -215,7 +215,7 @@ def _module_path(mod=None):
     return os.path.dirname(mod.__file__)
 
 
-def from_module(filename=None):
+def from_module(filename: str = None) -> str:
     frm = inspect.stack()[1]
     mod = inspect.getmodule(frm[0])
     if not filename:

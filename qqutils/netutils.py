@@ -47,7 +47,7 @@ def __http_adapter(retries=2):
     return HTTPAdapter(max_retries=retries)
 
 
-def _http_method(url, method, session=None, *args, **kwargs):
+def _http_method(url, method, session=None, check=True, *args, **kwargs):
     assert method in ['get', 'post', 'delete', 'put']
     s = session or requests.Session()
     s.mount('http://', __http_adapter())
@@ -55,7 +55,8 @@ def _http_method(url, method, session=None, *args, **kwargs):
     s.verify = False
     response = getattr(s, method)(url, *args, **kwargs)
     response.encoding = response.apparent_encoding
-    check_http_response(response)
+    if check:
+        check_http_response(response)
     return response
 
 
