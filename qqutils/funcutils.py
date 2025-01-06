@@ -3,6 +3,8 @@ import warnings
 from typing import Any, Callable
 import click
 import logging
+import time
+import random
 
 _logger = logging.getLogger(__name__)
 
@@ -65,13 +67,14 @@ def deprecated(reason=None):
 
     return __wrapper
 
+
 # define a retry decorator
 def retry_with_exponential_backoff(
     func: Callable[..., Any],
     initial_delay: float = 1,
     exponential_base: float = 2,
     jitter: bool = True,
-    max_retries: int = 10,
+    max_retries: int = 3,
     errors: tuple = (TimeoutError,),
 ) -> Callable[..., Any]:
     """Retry a function with exponential backoff."""
@@ -93,7 +96,7 @@ def retry_with_exponential_backoff(
 
                 # Check if max retries has been reached
                 if num_retries > max_retries:
-                    logger.error(f"Maximum number of retries ({max_retries}) exceeded.")
+                    _logger.error(f"Maximum number of retries ({max_retries}) exceeded.")
                     raise e
 
                 # Increment the delay
