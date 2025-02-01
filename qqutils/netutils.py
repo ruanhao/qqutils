@@ -48,11 +48,12 @@ def __http_adapter(retries=2):
 
 
 def _http_method(url, method, session=None, check=True, *args, **kwargs):
-    assert method in ['get', 'post', 'delete', 'put']
+    assert method in ['get', 'post', 'delete', 'put', 'patch']
     s = session or requests.Session()
     s.mount('http://', __http_adapter())
     s.mount('https://', __http_adapter())
     s.verify = False
+    logger.debug(f'{method.upper()} {url}, args: {args}, kwargs: {kwargs}')
     response = getattr(s, method)(url, *args, **kwargs)
     response.encoding = response.apparent_encoding
     if check:
