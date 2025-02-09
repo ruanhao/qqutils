@@ -146,6 +146,10 @@ __all__ = [
     'sqlite3_put',
     'sqlite3_jget',
     'sqlite3_jput',
+    'sqlalchemy_get_engine',
+    'sqlalchemy_get_session',
+    'sqlalchemy_execute',
+
 
     # cryptutils
     'aes_encrypt',

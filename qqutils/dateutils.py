@@ -74,6 +74,8 @@ def pretty_duration(seconds: int) -> str:
     )
     if seconds == 0:
         return '0S'
+    if seconds < 0:
+        return 'unknown'
     parts = []
     for unit, div in TIME_DURATION_UNITS:
         amount, seconds = divmod(int(seconds), div)

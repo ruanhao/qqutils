@@ -3,9 +3,12 @@ import json
 import sqlite3
 import logging
 import tempfile
+from typing import List
 from hprint import hprint
 from contextlib import closing
 from typing import Iterable, Any, Optional
+from sqlalchemy import create_engine, Engine, text
+from sqlalchemy.orm import sessionmaker, Session
 
 
 logger = logging.getLogger(__name__)
@@ -135,23 +138,104 @@ def sqlite3_jput(key: str, data: dict, *, db_path: str = None) -> Optional[dict]
     return ret
 
 
+# SQLAlchemy
+
+def sqlalchemy_get_engine(db_path: str = None) -> Engine:
+    db_path = db_path or os.path.join(tempfile.gettempdir(), '__qqutils__.db')
+    return create_engine(
+        f'sqlite:///{db_path}?check_same_thread=False',
+        echo=logger.isEnabledFor(logging.DEBUG)
+    )
+
+
+def sqlalchemy_get_session(engine: Engine) -> Session:
+    return sessionmaker(bind=engine)()
+
+
+def sqlalchemy_execute(sql: str, engine: Engine, params: dict = None) -> List[dict]:
+    logger.debug(f'[{engine.url}] Executing [{sql}] with params {params}')
+    session = sqlalchemy_get_session(engine)
+    sql = text(sql)
+    if params:
+        rows = session.execute(sql, params).fetchall()
+    else:
+        rows = session.execute(sql).fetchall()
+    return rows
+
+
 if __name__ == '__main__':
-    import time
 
-    k = str(time.time())
-    assert sqlite3_put(k, 'b') is None
-    assert sqlite3_put(k, 'c') == 'b'
-    assert sqlite3_get(k) == 'c'
+    def __test_sqlalchemy():
+        """https://www.cnblogs.com/lsdb/p/9835894.html"""
+        from sqlalchemy.orm import declarative_base
+        from sqlalchemy import Column, Integer, String
+        Base = declarative_base()
 
-    k = str(time.time())
-    assert sqlite3_put(k, '1') is None
-    assert sqlite3_get(k, cast=int) == 1
+        class User(Base):
+            __tablename__ = 'users'
+            # 如果表在同一个数据库服务（datebase）的不同数据库中（schema），可使用schema参数进一步指定数据库
+            # __table_args__ = {'schema': 'test_database'}
 
-    k = str(time.time())
-    assert sqlite3_jput(k, {'a': 1}) is None
-    assert sqlite3_jput(k, {'b': 2}) == {'a': 1}
-    assert sqlite3_jget(k) == {'b': 2}
+            id = Column(Integer, primary_key=True, autoincrement=True)
 
-    sqlite3_dump()
+            name = Column(String(20))
+            fullname = Column(String(32))
+            password = Column(String(32))
 
-    assert {'name': '__cache__'} in sqlite3_tables()
+            def __repr__(self):
+                return "<User(name='%s', fullname='%s', password='%s')>" % (
+                    self.name, self.fullname, self.password)
+
+        engine = sqlalchemy_get_engine("/Users/haoru/test.db")
+        session = sqlalchemy_get_session(engine)
+
+        # 创建数据表
+        User.__table__.create(engine, checkfirst=True)
+
+        # 插入数据
+        if session.query(User).count() < 3:
+            session.add(User(name='wendy', fullname='Wendy Williams', password='foobar'))
+            session.add(User(name='mary', fullname='Mary Contrary', password='xxg527'))
+            session.add(User(name='fred', fullname='Fred Flinstone', password='blah'))
+            session.commit()
+
+        # 查询数据
+        for instance in session.query(User).order_by(User.id):
+            print(instance.name, instance.fullname)
+
+        # 更新数据
+        session.query(User).filter(User.name == 'wendy').update({
+            'fullname': 'Wendy Williams II'
+        })
+        session.commit()
+
+        # 删除数据
+        session.query(User).filter(User.name == 'fred').delete()
+        session.commit()
+
+        output = sqlalchemy_execute('select * from users', engine)
+        print(output)
+
+    def __test_sqlite3():
+        import time
+
+        k = str(time.time())
+        assert sqlite3_put(k, 'b') is None
+        assert sqlite3_put(k, 'c') == 'b'
+        assert sqlite3_get(k) == 'c'
+
+        k = str(time.time())
+        assert sqlite3_put(k, '1') is None
+        assert sqlite3_get(k, cast=int) == 1
+
+        k = str(time.time())
+        assert sqlite3_jput(k, {'a': 1}) is None
+        assert sqlite3_jput(k, {'b': 2}) == {'a': 1}
+        assert sqlite3_jget(k) == {'b': 2}
+
+        sqlite3_dump()
+
+        assert {'name': '__cache__'} in sqlite3_tables()
+
+    __test_sqlite3()
+    __test_sqlalchemy()

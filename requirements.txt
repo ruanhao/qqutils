@@ -11,4 +11,5 @@ pwinput
 bcrypt
 requests_toolbelt
 pytz
+sqlalchemy
 # cryptography
