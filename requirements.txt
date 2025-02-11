@@ -12,4 +12,5 @@ bcrypt
 requests_toolbelt
 pytz
 sqlalchemy
+rich
 # cryptography

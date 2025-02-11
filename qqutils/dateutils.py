@@ -81,4 +81,4 @@ def pretty_duration(seconds: int) -> str:
         amount, seconds = divmod(int(seconds), div)
         if amount > 0:
             parts.append('{}{}'.format(amount, unit))
-    return ', '.join(parts)
+    return ','.join(parts)

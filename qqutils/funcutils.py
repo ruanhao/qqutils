@@ -26,6 +26,7 @@ _logger = logging.getLogger(__name__)
 #                 raise te
 
 
+# when the command need 'ctx' parameter
 def run_click_command_with_obj(command: click.Command, obj: Any, *args, **kwargs) -> Any:
     """Run a click command and return the result."""
     ctx = click.Context(command, obj=obj)

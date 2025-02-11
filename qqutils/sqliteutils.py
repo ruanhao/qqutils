@@ -6,7 +6,7 @@ import tempfile
 from typing import List
 from hprint import hprint
 from contextlib import closing
-from typing import Iterable, Any, Optional
+from typing import Iterable, Any, Optional, Dict
 from sqlalchemy import create_engine, Engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -56,13 +56,13 @@ def sqlite3_query(sql: str, params: Iterable[Any] = None, *, db_path: str = None
 
 def sqlite3_select_all(table, db_path: str = None) -> dict:
     db_path = db_path or os.path.join(tempfile.gettempdir(), '__qqutils__.db')
-    sql = f'select * from {table}'
+    sql = f'select * from "{table}"'
     return sqlite3_query(sql, db_path=db_path)
 
 
 def sqlite3_dump(table=None, db_path: str = None) -> dict:
     if table:
-        sql = f'select * from {table}'
+        sql = f'select * from "{table}"'
         rows = sqlite3_query(sql, db_path=db_path)
         rows0 = [{'TABLE': table, **row} for row in rows]
         hprint(rows0)
@@ -109,12 +109,21 @@ def sqlite3_put(key: str, value: Any, *, db_path: str = None) -> str:
 
 
 def sqlite3_jget(key: str, *, db_path: str = None) -> Optional[dict]:
-    """Use SQLite to store key-value pairs as JSON"""
+    """Use SQLite to fetch key-value pairs by key as JSON"""
     _ensure_cache_table(db_path)
     sql = 'select data from __cache__ where key = ?'
     records = sqlite3_query(sql, (key,), db_path=db_path)
     logger.debug(f'[{db_path}] Quering [{sql}] with params {key}, got {records}')
     return json.loads(records[-1]['data']) if records else None
+
+
+def sqlite3_jget_all(db_path: str = None) -> List[Dict]:
+    """Use SQLite to fetch all key-value pairs as JSON"""
+    _ensure_cache_table(db_path)
+    sql = 'select * from __cache__'
+    records = sqlite3_query(sql, None, db_path=db_path)
+    logger.debug(f'[{db_path}] Quering [{sql}], got {len(records)} records')
+    return records
 
 
 def sqlite3_jput(key: str, data: dict, *, db_path: str = None) -> Optional[dict]:
