@@ -13,4 +13,5 @@ requests_toolbelt
 pytz
 sqlalchemy
 rich
+seaborn
 # cryptography
