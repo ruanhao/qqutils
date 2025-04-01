@@ -9,9 +9,11 @@ from contextlib import closing
 from typing import Iterable, Any, Optional, Dict
 from sqlalchemy import create_engine, Engine, text
 from sqlalchemy.orm import sessionmaker, Session
-
+import getpass
 
 logger = logging.getLogger(__name__)
+
+_DEFAULT_DB_PATH = os.path.join(tempfile.gettempdir(), f'__qqutils_{getpass.getuser()}__.db')
 
 
 def _ensure_cache_table(db_path) -> None:
@@ -19,7 +21,7 @@ def _ensure_cache_table(db_path) -> None:
 
 
 def sqlite3_connect(db_path=None) -> sqlite3.Connection:
-    db_path = db_path or os.path.join(tempfile.gettempdir(), '__qqutils__.db')
+    db_path = db_path or _DEFAULT_DB_PATH
     return sqlite3.connect(db_path)
 
 
@@ -28,7 +30,7 @@ def sqlite3_cursor(conn: sqlite3.Connection) -> sqlite3.Cursor:
 
 
 def sqlite3_execute(sql: str, params: Iterable[Any] = None, *, db_path: str = None) -> None:
-    db_path = db_path or os.path.join(tempfile.gettempdir(), '__qqutils__.db')
+    db_path = db_path or _DEFAULT_DB_PATH
     # assert 'select' not in sql.lower(), 'Use sqlite3_query instead'
     logger.debug(f'[{db_path}] Executing [{sql}] with params {params}')
     with closing(sqlite3.connect(db_path)) as conn:
@@ -41,7 +43,7 @@ def sqlite3_execute(sql: str, params: Iterable[Any] = None, *, db_path: str = No
 
 
 def sqlite3_query(sql: str, params: Iterable[Any] = None, *, db_path: str = None) -> list:
-    db_path = db_path or os.path.join(tempfile.gettempdir(), '__qqutils__.db')
+    db_path = db_path or _DEFAULT_DB_PATH
     assert 'select' in sql.lower(), 'Use sqlite3_execute instead'
     logger.debug(f'[{db_path}] Quering [{sql}] with params {params}')
     with closing(sqlite3.connect(db_path)) as conn:
@@ -55,7 +57,7 @@ def sqlite3_query(sql: str, params: Iterable[Any] = None, *, db_path: str = None
 
 
 def sqlite3_select_all(table, db_path: str = None) -> dict:
-    db_path = db_path or os.path.join(tempfile.gettempdir(), '__qqutils__.db')
+    db_path = db_path or _DEFAULT_DB_PATH
     sql = f'select * from "{table}"'
     return sqlite3_query(sql, db_path=db_path)
 
@@ -150,7 +152,7 @@ def sqlite3_jput(key: str, data: dict, *, db_path: str = None) -> Optional[dict]
 # SQLAlchemy
 
 def sqlalchemy_get_engine(db_path: str = None) -> Engine:
-    db_path = db_path or os.path.join(tempfile.gettempdir(), '__qqutils__.db')
+    db_path = db_path or _DEFAULT_DB_PATH
     return create_engine(
         f'sqlite:///{db_path}?check_same_thread=False',
         echo=logger.isEnabledFor(logging.DEBUG)

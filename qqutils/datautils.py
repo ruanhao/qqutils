@@ -115,7 +115,14 @@ def draw_single_bar(
         xlabel: str = None,
         ylabel: str = None,
 ) -> str:
-    """Draw a single bar plot of the data using matplotlib. Ruturn the path of the saved plot."""
+    """Draw a single bar plot of the data using matplotlib. Ruturn the path of the saved plot.
+draw_single_bar(
+    [2, 3, 1, 4, 6, 2, 3, 1],
+    ["two", "three", "one", "four", "six", "two", "three", "one"],
+    title='Test',
+    ylabel='Y',
+)
+"""
     if xdata is None:
         xdata = list(range(len(ydata)))
     assert len(xdata) == len(ydata), "xdata and ydata must have the same length."
@@ -138,6 +145,18 @@ def draw_grouped_bar(
         ylimit: Tuple[float, float] = None,
         width = 0.25,
 ) -> str:
+    """
+draw_grouped_bar(
+    groups = ('Dev', 'QA', 'QA-o3'),
+    values = {
+        'w/o': (23029, 30743, 23644),
+        'w/': (16778, 22424, 16930),
+    },
+    title='Avg tokens (w/o and w/ tool selection)',
+    ylabel='Tokens',
+    ylimit=(0, 200000),
+)
+"""
     x = np.arange(len(groups))
     multiplier = 0.5 if len(values) % 2 == 0 else 0
 
@@ -159,3 +178,24 @@ def draw_grouped_bar(
         max_y = max([max(v) for v in values.values()])
         ax.set_ylim(0, max_y * (2 - 0.618))
     return save_figure(fig)
+
+
+def draw_multi_kde(
+        data: List[Dict[str, List[float]]],
+        title: str = None,
+        xlabel: str = None,
+        ylabel: str = 'Density',
+        filepath: str = None,
+        fill_between=False,
+) -> str:
+    import seaborn as sns
+
+    fig, ax = create_figure()
+    for label, d in data.items():
+        sns.kdeplot(d, ax=ax, label=label, fill=fill_between)
+
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.legend()
+    return save_figure(fig, filepath)

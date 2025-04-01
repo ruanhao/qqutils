@@ -1,3 +1,4 @@
+import platform
 import signal
 import inspect
 import os
@@ -334,3 +335,13 @@ def normalize_path(path) -> str:
 
 def random_string(length=8):
     return os.urandom(length // 2).hex()
+
+
+def os_open_file(filepath: str):
+
+    if platform.system() == 'Darwin':       # macOS
+        subprocess.call(('open', filepath))
+    elif platform.system() == 'Windows':    # Windows
+        os.startfile(filepath)
+    else:                                   # linux variants
+        subprocess.call(('xdg-open', filepath))

@@ -114,6 +114,7 @@ __all__ = [
     'backup',                   # backup a file
     'normalize_path',
     'random_string',
+    'os_open_file',
 
     # funcutils
     'cached',
