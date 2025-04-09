@@ -5,10 +5,21 @@
 
 # rm -rf dist; python -m build . && twine upload -u ruanhao dist/*
 
+set -o errexit
+
+tag=`date "+%Y%m%d%H%M%S"`
+pytest --html=report-$tag.html --self-contained-html
+
 tempdir="$(mktemp -d)"
 file "$tempdir"
 # Must prepare $HOME/.pypirc with API token:
 # [pypi]
 #   username = __token__
 #   password = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-python setup.py sdist -d "$tempdir" bdist_wheel -d "$tempdir" && twine upload $tempdir/*
+
+python -m build --sdist --wheel --outdir "$tempdir"
+if [[ -n $1 ]]; then
+    twine upload $tempdir/*
+    # twine upload --repository-url $1 $tempdir/*
+    exit 0
+fi

@@ -121,6 +121,7 @@ __all__ = [
     'run_click_command',
     'run_click_command_with_obj',
     'retry_with_exponential_backoff',
+    "synchronized",
 
     # dbutils
     'setup_icecream',
