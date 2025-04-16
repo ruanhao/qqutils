@@ -122,6 +122,7 @@ __all__ = [
     'run_click_command_with_obj',
     'retry_with_exponential_backoff',
     "synchronized",
+    "deprecated",
 
     # dbutils
     'setup_icecream',
@@ -172,5 +173,9 @@ __all__ = [
     'color_cycler',
     'format_bytes',
     'print_markdown',
+
+    # objutils
+    'parent',
+    'singleton',
 
 ]
