@@ -53,18 +53,3 @@ def bcrypt_hash(message: str, *, rounds: int = 12, prefix: bytes = b'2b') -> str
 
 def bcrypt_check(message: str, hashed: str) -> bool:
     return bcrypt.checkpw(message.encode(), hashed.encode())
-
-
-if __name__ == '__main__':
-    print(aes_encrypt('hello'))
-    assert aes_decrypt(aes_encrypt('hello')) == 'hello'
-
-    text = "abcdefg" * 1000
-    assert aes_decrypt(aes_encrypt(text)) == text
-
-    bh = bcrypt_hash('hello')
-    print(bh)
-    assert bcrypt_check('hello', bh)
-    bh2a = bcrypt_hash('hello', prefix=b'2a')
-    print(bh2a)
-    assert bcrypt_check('hello', bh2a)

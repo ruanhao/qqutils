@@ -143,7 +143,7 @@ def draw_grouped_bar(
         title: str = None,
         ylabel: str = None,
         ylimit: Tuple[float, float] = None,
-        width = 0.25,
+        width=0.25,
 ) -> str:
     """
 draw_grouped_bar(

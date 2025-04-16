@@ -62,19 +62,6 @@ def debug_timing(f):
     return wrap
 
 
-@debug_timing
-def _sleep(seconds):
-    time.sleep(seconds)
-
-
-def _test():
-    with Timer("Sleep 1s"):
-        time.sleep(1)
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    _sleep(1)
-
-
 @contextmanager
 def time_measurer(msg: str = None, digits: int = 2) -> Callable[[], float]:
     stopwatch = Stopwatch(digits)
@@ -85,7 +72,3 @@ def time_measurer(msg: str = None, digits: int = 2) -> Callable[[], float]:
     duration = stopwatch.duration
     if msg is not None:
         click.echo(f"({duration:.{digits}f}s)", err=True)
-
-
-if __name__ == '__main__':
-    _test()

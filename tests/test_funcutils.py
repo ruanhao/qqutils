@@ -1,5 +1,6 @@
-from qqutils.funcutils import synchronized
+from qqutils.funcutils import synchronized, retry_with_exponential_backoff
 from qqutils.threadutils import submit_thread, wait_forever
+import time
 import threading
 
 SUM = 0
@@ -67,3 +68,23 @@ def test_synchronized_class():
     wait_forever()
     print("[synchronized] result:", adder.value)  # == 1
     assert adder.value == 1, "synchronized failed"
+
+
+def test_retry_with_exponential_backoff():
+    count = 0
+
+    def func():
+        nonlocal count
+        print(time.time(), "calling ...")
+        count += 1
+        raise RuntimeError("Test error")
+
+    func = retry_with_exponential_backoff(func, max_retries=2, errors=(RuntimeError,))
+
+    try:
+        func()
+    except RuntimeError:
+        pass
+
+    print("[retry_with_exponential_backoff] result:", count)
+    assert count == 3
