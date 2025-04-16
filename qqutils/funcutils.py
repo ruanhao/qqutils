@@ -1,4 +1,4 @@
-from functools import wraps
+from functools import wraps, partial
 import warnings
 import threading
 from typing import Any, Callable
@@ -52,6 +52,23 @@ def cached(func):
     return inner
 
 
+# def deprecated(wrapped=None, reason=None):
+
+#     if wrapped is None:
+#         return partial(deprecated, reason=reason)
+
+#     @wrapt.decorator
+#     def __wrapper(wrapped, instance, args, kwargs):
+#         warnings.simplefilter('always', UserWarning)  # turn off filter
+#         warnings.warn(
+#             f"DEPRECATED: {wrapped.__name__}, {reason}" if reason else f"DEPRECATED: {wrapped.__name__}",
+#             category=UserWarning,
+#             stacklevel=2
+#         )
+#         return wrapped(*args, **kwargs)
+
+#     return __wrapper(wrapped)
+
 def deprecated(reason=None):
 
     def __wrapper(func):
@@ -73,7 +90,7 @@ def deprecated(reason=None):
 
 # define a retry decorator
 def retry_with_exponential_backoff(
-    func: Callable[..., Any],
+    func: Callable[..., Any] = None,
     initial_delay: float = 1,
     exponential_base: float = 2,
     jitter: bool = True,
@@ -82,7 +99,18 @@ def retry_with_exponential_backoff(
 ) -> Callable[..., Any]:
     """Retry a function with exponential backoff."""
 
-    def wrapper(*args, **kwargs):
+    if func is None:
+        return partial(
+            retry_with_exponential_backoff,
+            initial_delay=initial_delay,
+            exponential_base=exponential_base,
+            jitter=jitter,
+            max_retries=max_retries,
+            errors=errors,
+        )
+
+    @wrapt.decorator
+    def wrapper(func, _instance, args, kwargs):
         # Initialize variables
         num_retries = 0
         delay = initial_delay
@@ -112,7 +140,7 @@ def retry_with_exponential_backoff(
             except Exception as e:
                 raise e
 
-    return wrapper
+    return wrapper(func)
 
 
 # https://wrapt.readthedocs.io/en/master/examples.html
