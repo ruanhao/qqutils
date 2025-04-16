@@ -1,5 +1,7 @@
 import wrapt
+import threading
 from attrs import define, field
+from typing import Any
 from qqutils.objutils import singleton
 from qqutils.threadutils import submit_thread, wait_forever
 
@@ -19,7 +21,7 @@ class Wrapper(wrapt.ObjectProxy):
         return f"Wrapped object: {self.__wrapped__}"
 
 
-@define(slots=True, kw_only=True, order=True)
+@define(kw_only=True, order=True)
 class MyObject:
     name: str = field(converter=str.lower, order=False)
 
@@ -69,3 +71,72 @@ def test_obj_proxy():
 
     assert wrapperd_obj.name == "jill"
     wrapperd_obj.say_hello()
+
+
+class ObjectWrapper(wrapt.ObjectProxy):
+
+    _lock = threading.RLock()
+
+    def __init__(self, wrapped):
+        super().__init__(wrapped)
+
+    def __setattr__(self, name, value):
+        if name == '__wrapped__':
+            return super().__setattr__(name, value)
+
+        super().__getattribute__('on_setattr')(name, value)
+        wrapped = super().__getattribute__('__wrapped__')
+        setattr(wrapped, name, value)
+        super().__getattribute__('post_setattr')(name, value)
+
+    def __getattribute__(self, name):
+        if name == '__wrapped__':
+            return super().__getattribute__(name)
+
+        super().__getattribute__('on_getattr')(name)
+        wrapped = super().__getattribute__('__wrapped__')
+        try:
+            v = getattr(wrapped, name)
+            return super().__getattribute__('post_getattr')(name, v)
+        except AttributeError as e:
+            super().__getattribute__('on_getattr_error')(name, e)
+            raise e
+
+    def on_getattr(self, name: str) -> None:
+        print(f"Accessing attribute: {name}")
+        pass
+
+    def on_getattr_error(self, name: str, error: AttributeError) -> None:
+        print(f"Error accessing attribute '{name}': {error}")
+        pass
+
+    def post_getattr(self, name: str, value: Any) -> Any:
+        print(f"Post-processing attribute '{name}' with value: {value}")
+        return value
+
+    def on_setattr(self, name: str, value: Any) -> None:
+        print(f"Setting attribute '{name}' to value: {value}")
+        pass
+
+    def post_setattr(self, name: str, value: Any) -> None:
+        print(f"Post-processing attribute '{name}' with value: {value}")
+        pass
+
+
+def test_object_wrapper():
+
+    class MyObject:
+        def __init__(self, name):
+            self.name = name
+
+        def __str__(self):
+            return f"MyObject(name={self.name})"
+
+    obj = MyObject(name='Ross')
+    obj = ObjectWrapper(obj)
+    obj.a = 1
+    obj.a
+    try:
+        obj.b
+    except AttributeError:
+        pass

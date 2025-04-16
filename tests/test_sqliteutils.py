@@ -54,7 +54,7 @@ def test_sqlalchemy():
             return "<User(name='%s', fullname='%s', password='%s')>" % (
                 self.name, self.fullname, self.password)
 
-    engine = sqlalchemy_get_engine("/Users/haoru/test.db")
+    engine = sqlalchemy_get_engine("/tmp/test.db")
     session = sqlalchemy_get_session(engine)
 
     # 创建数据表
