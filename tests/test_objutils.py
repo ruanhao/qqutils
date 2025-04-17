@@ -1,6 +1,8 @@
 import wrapt
+import time
 from attrs import define, field
 from typing import Any
+from functools import wraps
 from qqutils.objutils import singleton
 from qqutils.threadutils import submit_thread, wait_forever
 
@@ -136,3 +138,55 @@ def test_object_wrapper():
 
     obj.__wrapped__ = MyObject(name='Rachel')
     assert obj.name == 'Rachel'
+
+
+# this version is more simple then ObjectWrapper
+class MonitoringProxy(wrapt.ObjectProxy):
+
+    def __init__(self, wrapped):
+        super().__init__(wrapped)
+
+    def __getattr__(self, name):
+        attr = super().__getattr__(name)
+
+        if callable(attr):
+            @wraps(attr)
+            def wrapper(*args, **kwargs):
+                start = time.time()
+                print(f"[LOG] Calling {name} with args={args}, kwargs={kwargs}")
+                try:
+                    result = attr(*args, **kwargs)
+                    return result
+                finally:
+                    duration = time.time() - start
+                    print(f"[LOG] {name} took {duration:.4f} seconds")
+            return wrapper
+        else:
+            return attr
+
+
+def test_monitoring_proxy():
+
+    class MyObject:
+        def __init__(self, name):
+            self.name = name
+
+        def __str__(self):
+            return f"MyObject(name={self.name})"
+
+        def say_hello(self):
+            print(f"Hello, my name is {self.name}!")
+
+    raw_obj = MyObject(name='Ross')
+    obj = MonitoringProxy(raw_obj)
+    obj.a = 1
+    obj.a
+    try:
+        obj.b
+    except AttributeError:
+        pass
+
+    obj.__wrapped__ = MyObject(name='Rachel')
+    assert obj.name == 'Rachel'
+    print("func name:", obj.say_hello.__name__)
+    obj.say_hello()
