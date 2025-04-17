@@ -145,6 +145,7 @@ class MonitoringProxy(wrapt.ObjectProxy):
 
     def __init__(self, wrapped):
         super().__init__(wrapped)
+        self._self_value = "anything you want"  # attr for Proxy itself, not for wrapped
 
     def __getattr__(self, name):
         attr = super().__getattr__(name)
