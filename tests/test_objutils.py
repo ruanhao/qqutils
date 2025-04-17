@@ -1,5 +1,4 @@
 import wrapt
-import threading
 from attrs import define, field
 from typing import Any
 from qqutils.objutils import singleton
@@ -75,10 +74,8 @@ def test_obj_proxy():
 
 class ObjectWrapper(wrapt.ObjectProxy):
 
-    _lock = threading.RLock()
-
     def __init__(self, wrapped):
-        super().__init__(wrapped)
+        super(ObjectWrapper, self).__init__(wrapped)
 
     def __setattr__(self, name, value):
         if name == '__wrapped__':
@@ -104,23 +101,19 @@ class ObjectWrapper(wrapt.ObjectProxy):
 
     def on_getattr(self, name: str) -> None:
         print(f"Accessing attribute: {name}")
-        pass
 
     def on_getattr_error(self, name: str, error: AttributeError) -> None:
         print(f"Error accessing attribute '{name}': {error}")
-        pass
 
     def post_getattr(self, name: str, value: Any) -> Any:
-        print(f"Post-processing attribute '{name}' with value: {value}")
+        print(f"Post-get attribute '{name}' with value: {value}")
         return value
 
     def on_setattr(self, name: str, value: Any) -> None:
         print(f"Setting attribute '{name}' to value: {value}")
-        pass
 
     def post_setattr(self, name: str, value: Any) -> None:
-        print(f"Post-processing attribute '{name}' with value: {value}")
-        pass
+        print(f"Post-set attribute '{name}' with value: {value}")
 
 
 def test_object_wrapper():
@@ -132,11 +125,14 @@ def test_object_wrapper():
         def __str__(self):
             return f"MyObject(name={self.name})"
 
-    obj = MyObject(name='Ross')
-    obj = ObjectWrapper(obj)
+    raw_obj = MyObject(name='Ross')
+    obj = ObjectWrapper(raw_obj)
     obj.a = 1
     obj.a
     try:
         obj.b
     except AttributeError:
         pass
+
+    obj.__wrapped__ = MyObject(name='Rachel')
+    assert obj.name == 'Rachel'
