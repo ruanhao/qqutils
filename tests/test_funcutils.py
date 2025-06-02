@@ -5,6 +5,7 @@ import threading
 
 SUM = 0
 
+
 def test_cached():
 
     @cached

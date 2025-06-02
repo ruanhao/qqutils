@@ -4,6 +4,7 @@ from qqutils.sqliteutils import (
     sqlalchemy_get_session,
     sqlite3_put,
     sqlite3_get,
+    sqlite3_delete,
     sqlite3_jput,
     sqlite3_jget,
     sqlite3_dump,
@@ -22,6 +23,8 @@ def test_sqlite3():
     k = str(time.time())
     assert sqlite3_put(k, '1') is None
     assert sqlite3_get(k, cast=int) == 1
+    sqlite3_delete(k)
+    assert sqlite3_get(k) is None
 
     k = str(time.time())
     assert sqlite3_jput(k, {'a': 1}) is None

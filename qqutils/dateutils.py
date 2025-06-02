@@ -73,7 +73,7 @@ def pretty_duration(seconds: int) -> str:
         ('s', 1)
     )
     if seconds == 0:
-        return '0S'
+        return '0s'
     if seconds < 0:
         return 'unknown'
     parts = []

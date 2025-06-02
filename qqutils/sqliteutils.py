@@ -89,6 +89,14 @@ def sqlite3_get(key: str, *, db_path: str = None, cast=str) -> Any:
     return cast(records[-1]['value']) if records else None
 
 
+def sqlite3_delete(key: str, *, db_path: str = None) -> None:
+    """Use SQLite to delete a key-value pair"""
+    _ensure_cache_table(db_path)
+    del_sql = 'DELETE FROM __cache__ WHERE key = ?'
+    logger.debug(f'[{db_path}] Executing [{del_sql}] with params {key}')
+    sqlite3_execute(del_sql, (key,), db_path=db_path)
+
+
 def sqlite3_put(key: str, value: Any, *, db_path: str = None) -> str:
     """Use SQLite to store key-value pairs"""
     _ensure_cache_table(db_path)
