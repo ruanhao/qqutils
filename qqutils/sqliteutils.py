@@ -13,7 +13,7 @@ import getpass
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_DB_PATH = os.path.join(tempfile.gettempdir(), f'__qqutils_{getpass.getuser()}__.db')
+_DEFAULT_DB_PATH = os.path.join(tempfile.gettempdir(), f'__qqutils_{os.getenv("SUDO_USER") or getpass.getuser()}__.db')
 
 
 def _ensure_cache_table(db_path) -> None:
