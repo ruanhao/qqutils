@@ -2,15 +2,22 @@ import click
 import os
 from itertools import cycle
 from functools import partial
-from rich.console import Console
-from rich.markdown import Markdown
 from typing import Dict
 
 
+# https://rich.readthedocs.io/en/stable/console.html#printing
 def print_markdown(text: str, **kwargs: Dict) -> None:
+    from rich.console import Console
+    from rich.markdown import Markdown
     console = Console()
     md = Markdown(text)
     console.print(md, **kwargs)
+
+
+def print_html(text: str, **kwargs: Dict) -> None:
+    import html2markdown
+    md = html2markdown.convert(text)
+    print_markdown(md, **kwargs)
 
 
 def style(text, fg, bold=False, underline=False):

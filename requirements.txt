@@ -15,4 +15,5 @@ sqlalchemy
 rich
 seaborn
 wrapt
+html2markdown
 # cryptography
