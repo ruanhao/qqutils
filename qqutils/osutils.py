@@ -12,6 +12,7 @@ import getpass
 from contextlib import contextmanager
 import click
 from pathlib import Path
+from .funcutils import deprecated
 
 
 _logger = logging.getLogger(__name__)
@@ -168,19 +169,19 @@ def switch_dir(dir=None):
         os.chdir(orig_cwd)
 
 
-# deprecated
+@deprecated(reason="Use temp_dir instead")
 def tmpdir():
     return tempfile.gettempdir()
 
 
-# deprecated
+@deprecated(reason="Use temp_file instead")
 def tmpfile(filename, create_tempdir=False) -> Path:
     tmp_dir_path = tmpdir(create_tempdir)
     tmp_dir_path.mkdir(parents=True, exist_ok=True)
     return tmp_dir_path / filename
 
 
-# deprecated
+@deprecated(reason="Use temp_file instead")
 def create_temp_file(filename: str) -> str:
     temp_dir = tempfile.mkdtemp()
     file_path = os.path.join(temp_dir, filename)
@@ -306,13 +307,21 @@ def from_path_str(path_str: str, default=None, logger=_logger) -> Path:
     return path
 
 
-def under_home(*path: str, all_dir=False, create=False) -> Path:
+def under_home(*path: str, all_dir: bool = False, create: bool = False, home_envvar: str = None) -> Path:
     """
     >>> under_home('a', 'b', 'c.txt')
     PosixPath('/Users/haoru/a/b/c.txt')
     >>>
     """
-    p = Path.home().joinpath(*path).expanduser().resolve()
+    root = Path.home()
+    if home_envvar:
+        root = Path(os.environ.get(home_envvar, Path.home()))
+        if not root.exists() or not root.is_dir():
+            raise ValueError(f"Environment variable {home_envvar} does not point to a valid directory: {root}")
+        if not os.access(root, os.W_OK):
+            raise PermissionError(f"Cannot write to directory: {root}")
+
+    p = root.joinpath(*path).expanduser().resolve()
     if not create:
         return p
     if all_dir:
