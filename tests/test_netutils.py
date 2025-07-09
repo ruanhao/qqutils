@@ -69,7 +69,13 @@ def test_httpx_method_case_fail_without_check():
         httpx_patch("https://httpbin.org/status/404", check=False),
     )
     for response in responses:
-        assert not response.is_success, response.text
+        if isinstance(response, httpx.Response):
+            assert not response.is_success, response.text
+        elif isinstance(response, Exception):
+            raise response
+        else:
+            raise TypeError(f"Unexpected response type: {type(response)}")
+
 
 
 def test_httpx_method_case_fail_with_check():

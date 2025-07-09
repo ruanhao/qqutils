@@ -24,16 +24,16 @@ class _DummyTqdm:
 def wait_for_complete(*coroutines: Awaitable[Any], progress: bool = False) -> list[Any | Exception]:
     _tqdm = _DummyTqdm if not progress else tqdm
 
+    async def __wrapper(coroutine: Awaitable[Any], pbar: tqdm) -> Any:
+        try:
+            return await coroutine
+        finally:
+            pbar.update(1)
+
     async def __wait_for_tasks() -> list[Any]:
-        result = []
         with _tqdm(total=len(coroutines), desc="Running coroutines") as pbar:
-            for future in asyncio.as_completed(coroutines):
-                try:
-                    result.append(await future)
-                except Exception as e:
-                    result.append(e)
-                pbar.update(1)
-        return result
+            coroutines_ = [__wrapper(coroutine, pbar) for coroutine in coroutines]
+            return await asyncio.gather(*coroutines_, return_exceptions=True)
 
     loop = asyncio.get_event_loop()
     return loop.run_until_complete(__wait_for_tasks())
