@@ -1,9 +1,12 @@
 import asyncio
 from typing import Any, Awaitable
 from tqdm import tqdm
+import logging
 
 
 __all__ = "wait_for_complete",
+
+logger = logging.getLogger(__name__)
 
 
 class _DummyTqdm:
@@ -25,13 +28,18 @@ def wait_for_complete(
         *coroutines: Awaitable[Any],
         progress: bool = False,
         ignore_exceptions: bool = False,
-        description="Running coroutines"
+        description="Running coroutines",
+        timeout_seconds: int = -1,
 ) -> list[Any | Exception]:
     _tqdm = _DummyTqdm if not progress else tqdm
 
     async def __wrapper(coroutine: Awaitable[Any], pbar: tqdm) -> Any:
         try:
             return await coroutine
+        except Exception as e:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.exception(f"Exception in coroutine: [{e}]")
+            raise
         finally:
             pbar.update(1)
 
@@ -44,4 +52,7 @@ def wait_for_complete(
             return result
 
     loop = asyncio.get_event_loop()
-    return loop.run_until_complete(__wait_for_tasks())
+    if timeout_seconds < 0:
+        return loop.run_until_complete(__wait_for_tasks())
+    else:
+        return loop.run_until_complete(asyncio.wait_for(__wait_for_tasks(), timeout=timeout_seconds))

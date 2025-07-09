@@ -56,3 +56,16 @@ def test_wait_for_complete_case_ignore_error():
     assert len(results) == 4, f"Expected 4 results, got {len(results)}"
     for result in results:
         assert not isinstance(result, Exception), "Expected no exceptions in results"
+
+
+def test_wait_for_complete_case_timeout():
+    try:
+        wait_for_complete(
+            sleep(2),
+            sleep(3),
+            progress=True,
+            timeout_seconds=1,
+        )
+        assert False, "Expected a TimeoutError"
+    except asyncio.TimeoutError:
+        assert True, "Expected a TimeoutError"
