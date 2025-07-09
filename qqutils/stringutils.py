@@ -19,6 +19,7 @@ __all__ = (
     'color_cycler',
     'format_bytes',
     'print_markdown',
+    'print_html',
 )
 
 
