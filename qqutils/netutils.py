@@ -63,6 +63,7 @@ __all__ = (
     'sock_connect',
     'is_readable',
     'is_port_in_use',
+    'run_proxy_async',
 )
 
 logger = logging.getLogger(__name__)

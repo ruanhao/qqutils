@@ -10,6 +10,7 @@ __all__ = (
     'timestamp_seconds',
     'timestamp_millis',
     'local_timestamp',
+    'datestr2ts',
 )
 
 
