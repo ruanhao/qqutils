@@ -11,6 +11,23 @@ from sqlalchemy import create_engine, Engine, text
 from sqlalchemy.orm import sessionmaker, Session
 import getpass
 
+__all__ = (
+    'sqlite3_connect',
+    'sqlite3_cursor',
+    'sqlite3_execute',
+    'sqlite3_query',
+    'sqlite3_tables',
+    'sqlite3_select_all',
+    'sqlite3_dump',
+    'sqlite3_get',
+    'sqlite3_put',
+    'sqlite3_jget',
+    'sqlite3_jput',
+    'sqlalchemy_get_engine',
+    'sqlalchemy_get_session',
+    'sqlalchemy_execute',
+)
+
 logger = logging.getLogger(__name__)
 
 _DEFAULT_DB_PATH = os.path.join(tempfile.gettempdir(), f'__qqutils_{os.getenv("SUDO_USER") or getpass.getuser()}__.db')

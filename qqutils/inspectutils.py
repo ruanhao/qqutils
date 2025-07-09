@@ -3,6 +3,9 @@ from typing import List
 from attrs import define, field, validators, setters, asdict, astuple
 
 
+__all__ = "get_source",
+
+
 def get_source(obj) -> str:
     return inspect.getsource(obj)
 

@@ -6,6 +6,8 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 import os
 
+__all__ = "send_mail",
+
 logger = logging.getLogger(__name__)
 
 

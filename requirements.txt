@@ -1,4 +1,5 @@
 hprint
+requests
 icecream
 click
 stopwatch.py
@@ -16,4 +17,6 @@ rich
 seaborn
 wrapt
 html2markdown
+httpx
+charset-normalizer
 # cryptography

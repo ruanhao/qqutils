@@ -5,6 +5,11 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from typing import Union
 
+__all__ = (
+    'aes_encrypt',
+    'aes_decrypt',
+)
+
 _PASSWORD = "Who1sy0urDaddy?!"
 
 

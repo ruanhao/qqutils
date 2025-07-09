@@ -1,27 +1,69 @@
-import sys
-from typing import Tuple, Callable
-import asyncio
 import os
+import sys
 import ssl
 import json
+import httpx
 import socket
 import select
-import logging
-import requests
 import pickle
 import base64
-from pathlib import Path
-from qqutils.funcutils import cached
-from qqutils.osutils import from_module
-from contextlib import contextmanager
-from qqutils.threadutils import submit_daemon_thread
-from functools import partial, lru_cache
-from requests.adapters import HTTPAdapter
-from qqutils.logutils import pdebug, pinfo, perror, sneaky
+import asyncio
+import logging
+import requests
 from tqdm import tqdm
-from tqdm.utils import CallbackIOWrapper
-from requests_toolbelt.multipart import encoder
+from pathlib import Path
 from attrs import define, field
+from qqutils.funcutils import cached
+from contextlib import contextmanager
+from qqutils.osutils import from_module
+from functools import partial, lru_cache
+from tqdm.utils import CallbackIOWrapper
+from requests.adapters import HTTPAdapter
+from charset_normalizer import from_bytes
+from requests_toolbelt.multipart import encoder
+from qqutils.threadutils import submit_daemon_thread
+from qqutils.logutils import pdebug, pinfo, perror, sneaky
+from typing import Tuple, Callable, Mapping, Awaitable
+
+__all__ = (
+    'disable_urllib3_warnings',
+    'download',
+    'upload_multipart',
+    'check_http_response',
+    'http_get',
+    'http_post',
+    'http_put',
+    'http_delete',
+    'http_patch',
+    'http_session_get',
+    'http_session_post',
+    'http_session_put',
+    'http_session_delete',
+    'http_session_patch',
+
+    'httpx_get',
+    'httpx_post',
+    'httpx_put',
+    'httpx_delete',
+    'httpx_patch',
+    'httpx_session_get',
+    'httpx_session_post',
+    'httpx_session_put',
+    'httpx_session_delete',
+    'httpx_session_patch',
+
+    'encode_session_base64',
+    'decode_session_base64',
+    'sockinfo',
+    'run_proxy',
+    'sendall',
+    'recvall',
+    'acceptall',
+    'eventfd',
+    'sock_connect',
+    'is_readable',
+    'is_port_in_use',
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +73,17 @@ def disable_urllib3_warnings():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
-def check_http_response(response, need_raise=True):
-    if response.ok:
-        return
-    if 'application/json' in (response.headers.get('content-type') or ''):
-        print(json.dumps(response.json(), indent=4), file=sys.stderr)
-    else:
-        print(response.text, file=sys.stderr)
-    if need_raise:
+def check_http_response(response: requests.Response | httpx.Response, need_raise: bool = True) -> None:
+    try:
         response.raise_for_status()
+    except (requests.HTTPError, httpx.HTTPStatusError):
+        if 'application/json' in (response.headers.get('content-type') or ''):
+            print(json.dumps(response.json(), indent=4), file=sys.stderr)
+        else:
+            if response.text:
+                print(response.text, file=sys.stderr)
+        if need_raise:
+            raise
 
 
 @lru_cache(maxsize=8)
@@ -47,7 +91,17 @@ def __http_adapter(retries=2):
     return HTTPAdapter(max_retries=retries)
 
 
+@lru_cache(maxsize=8)
+def __httpx_mounts(retries=1) -> Mapping[str, httpx.AsyncHTTPTransport]:
+    transport = httpx.AsyncHTTPTransport(verify=False, retries=retries)
+    return {
+        'http://': transport,
+        'https://': transport
+    }
+
+
 def _http_method(url, method, session=None, check=True, *args, **kwargs):
+    method = (method or '').lower()
     assert method in ['get', 'post', 'delete', 'put', 'patch']
     s = session or requests.Session()
     s.mount('http://', __http_adapter())
@@ -88,6 +142,49 @@ def http_session_patch(session, url, *args, **kwargs):
     return _http_method(url, 'patch', session, *args, **kwargs)
 
 
+# httpx
+
+async def _httpx_method(url: str, method: str, session: httpx.AsyncClient = None, check: bool = True, *args, **kwargs) -> Awaitable[httpx.Response]:
+    method = (method or '').lower()
+    assert method in ['get', 'post', 'delete', 'put', 'patch']
+    s = session or httpx.AsyncClient(mounts=__httpx_mounts())
+    logger.debug(f"{method.upper()} {url}, args: {args}, kwargs: {kwargs}")
+    response: httpx.Response = await getattr(s, method)(url, *args, **kwargs)
+    detected = from_bytes(response.content).best()
+    if detected:
+        response.encoding = detected.encoding
+    if check:
+        check_http_response(response)
+    return response
+
+
+httpx_get: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='get')
+httpx_post: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='post')
+httpx_put: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='put')
+httpx_delete: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='delete')
+httpx_patch: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='patch')
+
+
+async def httpx_session_get(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+    return await _http_method(url, 'get', session, *args, **kwargs)
+
+
+async def httpx_session_post(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+    return await _http_method(url, 'post', session, *args, **kwargs)
+
+
+async def httpx_session_put(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+    return await _http_method(url, 'put', session, *args, **kwargs)
+
+
+async def httpx_session_delete(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+    return await _http_method(url, 'delete', session, *args, **kwargs)
+
+
+async def httpx_session_patch(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+    return await _http_method(url, 'patch', session, *args, **kwargs)
+
+
 def encode_session_base64(session: requests.Session) -> str:
     return base64.b64encode(pickle.dumps(session)).decode()
 
@@ -111,7 +208,7 @@ def _handle(buffer, direction, src, dst):
 
 
 def socket_description(sock):
-    '''[id: 0xd829bade, L:/127.0.0.1:2069 - R:/127.0.0.1:55666]'''
+    """[id: 0xd829bade, L:/127.0.0.1:2069 - R:/127.0.0.1:55666]"""
     sock_id = hex(id(sock))
     fileno = sock.fileno()
     s_addr = None
@@ -119,14 +216,11 @@ def socket_description(sock):
         s_addr, s_port = sock.getsockname()[:2]
         d_addr, d_port = sock.getpeername()[:2]
         return f"[id: {sock_id}, fd: {fileno}, L:/{s_addr}:{s_port} - R:/{d_addr}:{d_port}]"
-        pass
     except Exception:
         if s_addr:
             return f"[id: {sock_id}, fd: {fileno}, LISTENING]"
         else:
             return f"[id: {sock_id}, fd: {fileno}, CLOSED]"
-
-    return f"{sock.getsockname()} <=> {sock.getpeername()}"
 
 
 sockinfo = socket_description
@@ -576,25 +670,3 @@ def download(url: str, path: Path, chunk_size: int = 1024, progress: bool = Fals
                 if chunk:
                     f.write(chunk)
                     bar.update(len(chunk))
-
-
-def backup(path: Path, suffix: str = '.bak', force: bool = False):
-    if not path.exists():
-        return
-    bak_path = path.with_suffix(suffix)
-    if bak_path.exists() and not force:
-        return
-    with path.open('rb') as source:
-        with bak_path.open('wb') as target:
-            target.write(source.read())
-
-
-def _test_upload_multipart():
-    # r = upload_multipart("https://httpbin.org/post", Path("dbgutils.py"))
-    r = upload_multipart("http://localhost:8080/post", Path("dbgutils.py"))
-    assert r.ok, r.text
-    print(r.text)
-
-
-if __name__ == '__main__':
-    _test_upload_multipart()

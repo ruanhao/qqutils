@@ -1,6 +1,7 @@
 import os
 import getpass
 from qqutils.osutils import (
+    from_module,
     from_path_str,
     temp_dir,
     under_home,
@@ -58,3 +59,10 @@ def test_under_home():
     assert username in p.as_posix()
     assert p.exists()
     assert p.is_dir()
+
+
+def test_from_module():
+    assert from_module().endswith(os.sep.join(("qqutils", "tests")))
+    assert from_module(as_path=True).as_posix().endswith(os.sep.join(("qqutils", "tests")))
+    assert from_module("test_osutils.py").endswith(os.sep.join(("qqutils", "tests", "test_osutils.py")))
+    assert from_module("test_osutils.py", True).as_posix().endswith(os.sep.join(("qqutils", "tests", "test_osutils.py")))

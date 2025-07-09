@@ -9,6 +9,13 @@ import time
 from typing import Callable
 import click
 
+__all__ = (
+    'assert_that',
+    'simple_timing',
+    'debug_timing',
+    'time_measurer',
+)
+
 _logger = logging.getLogger(__name__)
 
 

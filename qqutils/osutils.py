@@ -14,6 +14,31 @@ import click
 from pathlib import Path
 from .funcutils import deprecated
 
+__all__ = (
+    'bye',
+    'goodbye',
+    'run_script',
+    'as_root',
+    'is_root',
+    'switch_dir',
+    'tmpdir',                   # deprecated
+    'temp_dir',
+    'temp_file',
+    'from_cwd',
+    'from_module',
+    'write_to_clipboard',
+    'prompt',
+    'confirm',
+    'pause',
+    'add_suffix',
+    'modify_extension',
+    'from_path_str',
+    'under_home',
+    'backup',                   # backup a file
+    'normalize_path',
+    'random_string',
+    'os_open_file',
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -217,12 +242,15 @@ def _module_path(mod=None):
     return os.path.dirname(mod.__file__)
 
 
-def from_module(filename: str = None) -> str:
+def from_module(filename: str = None, as_path: bool = False) -> str | Path:
     frm = inspect.stack()[1]
     mod = inspect.getmodule(frm[0])
+    path: str = None
     if not filename:
-        return _module_path(mod)
-    return os.path.join(_module_path(mod), filename)
+        path = _module_path(mod)
+    else:
+        path = os.path.join(_module_path(mod), filename)
+    return Path(path) if as_path else path
 
 
 def bye(msg, rc=1, logger=_logger):
@@ -354,3 +382,14 @@ def os_open_file(filepath: str):
         os.startfile(filepath)
     else:                                   # linux variants
         subprocess.call(('xdg-open', filepath))
+
+
+def backup(path: Path, suffix: str = '.bak', force: bool = False):
+    if not path.exists():
+        return
+    bak_path = path.with_suffix(suffix)
+    if bak_path.exists() and not force:
+        return
+    with path.open('rb') as source:
+        with bak_path.open('wb') as target:
+            target.write(source.read())
