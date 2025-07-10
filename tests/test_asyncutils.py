@@ -3,10 +3,10 @@ import asyncio
 import time
 
 
-async def sleep(seconds: int) -> str:
+async def sleep(seconds: int) -> float:
     s = time.time()
     await asyncio.sleep(seconds)
-    return f"Slept for {time.time() - s} seconds"
+    return time.time() - s
 
 
 async def throw_error():
@@ -69,3 +69,19 @@ def test_wait_for_complete_case_timeout():
         assert False, "Expected a TimeoutError"
     except asyncio.TimeoutError:
         assert True, "Expected a TimeoutError"
+
+
+def test_wait_for_complete_case_fast_first():
+    results = wait_for_complete(
+        sleep(4),
+        sleep(3),
+        sleep(2),
+        sleep(1),
+        throw_error(),
+        progress=True,
+        fast_first=True,
+    )
+    print(results)
+    assert len(results) == 5, f"Expected 5 results, got {len(results)}"
+    assert isinstance(results[0], ValueError), "Expected the first result to be an exception"
+    assert results[1] < results[2] < results[3] < results[4], "Expected results to be in ascending order of completion time"

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Awaitable
+from typing import Any, Awaitable, Annotated
 from tqdm import tqdm
 import logging
 
@@ -30,6 +30,7 @@ def wait_for_complete(
         ignore_exceptions: bool = False,
         description="Running coroutines",
         timeout_seconds: int = -1,
+        fast_first: Annotated[bool, "Results are sorted by completion time"] = False,
 ) -> list[Any | Exception]:
     _tqdm = _DummyTqdm if not progress else tqdm
 
@@ -46,7 +47,16 @@ def wait_for_complete(
     async def __wait_for_tasks() -> list[Any]:
         with _tqdm(total=len(coroutines), desc=description) as pbar:
             coroutines_ = [__wrapper(coroutine, pbar) for coroutine in coroutines]
-            result = await asyncio.gather(*coroutines_, return_exceptions=True)
+            if fast_first:
+                result = []
+                for c in asyncio.as_completed(coroutines_):
+                    try:
+                        result.append(await c)
+                    except Exception as e:
+                        result.append(e)
+            else:
+                result = await asyncio.gather(*coroutines_, return_exceptions=True)
+
             if ignore_exceptions:
                 return [r for r in result if not isinstance(r, Exception)]
             return result
