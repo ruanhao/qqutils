@@ -7,7 +7,6 @@ from datetime import datetime
 import inspect
 import traceback
 import sys
-import click
 
 __all__ = (
     'setup_icecream',
@@ -44,7 +43,6 @@ def setup_icecream(verbose=False):
             builtins = __import__('builtins')
 
         def __ic(*args):
-            nonlocal verbose
             if verbose:
                 print(f'{datetime.now()}|>', *args, flush=True, file=sys.stderr)
 
@@ -99,7 +97,7 @@ def _get_logger(max_depth=8):
 
 def pfatal(msg):
     _get_logger().critical(msg)
-    click.echo(msg, err=True)
+    print(msg, file=sys.stderr, flush=True)
     exit(1)
 
 
@@ -107,32 +105,32 @@ def pinfo(msg):
     logger = _get_logger()
     logger.info(msg)
     if logger.isEnabledFor(logging.INFO):
-        click.echo(msg)
+        print(msg, flush=True)
 
 
 def perror(msg):
     logger = _get_logger()
     logger.error(msg)
     if logger.isEnabledFor(logging.ERROR):
-        click.echo(msg, err=True)
+        print(msg, file=sys.stderr, flush=True)
 
 
 def pwarning(msg):
     logger = _get_logger()
     logger.warning(msg)
     if logger.isEnabledFor(logging.WARNING):
-        click.echo(msg, err=True)
+        print(msg, file=sys.stderr, flush=True)
 
 
 def pdebug(msg, stderr=False):
     logger = _get_logger()
     logger.debug(msg)
     if logger.isEnabledFor(logging.DEBUG):
-        click.echo(msg, err=stderr)
+        print(msg, file=sys.stderr, flush=True)
 
 
 def pstderr(msg):
-    click.echo(msg, err=True)
+    print(msg, file=sys.stderr, flush=True)
 
 
 def install_print_with_flush():

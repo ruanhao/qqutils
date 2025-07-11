@@ -1,18 +1,15 @@
-import platform
 import signal
-import inspect
 import os
 import tempfile
 from queue import Queue, Empty
-from concurrent.futures import ThreadPoolExecutor
 import logging
 import subprocess
 import sys
 import getpass
 from contextlib import contextmanager
-import click
 from pathlib import Path
-from .funcutils import deprecated
+from .funcutils import deprecated, cached
+
 
 __all__ = (
     'bye',
@@ -38,12 +35,39 @@ __all__ = (
     'normalize_path',
     'random_string',
     'os_open_file',
+    'load_dotenv',
 )
 
 _logger = logging.getLogger(__name__)
 
+
+def load_dotenv(
+        *,
+        filename: str = '.env',
+        from_cwd: bool = False,
+        interpolate: bool = True,
+        override: bool = True,
+        verbose: bool = False,
+) -> bool:
+    """
+    Load environment variables from a .env file in the current directory or the user's home directory.
+    """
+    import dotenv
+    dotenv_path = dotenv.find_dotenv(filename=filename, usecwd=from_cwd)
+    if dotenv_path:
+        r = dotenv.load_dotenv(dotenv_path=dotenv_path, interpolate=interpolate, override=override, verbose=verbose)
+        _logger.debug(f"Loading environment variables from {dotenv_path}: {r}")
+        return r
+    else:
+        _logger.warning(f"No {filename} file found, skipping loading environment variables.")
+        return False
+
+
 # non blocking stream reader
-nbsr_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix='nbsr')
+@cached
+def _get_nbsr_executor():
+    from concurrent.futures import ThreadPoolExecutor
+    return ThreadPoolExecutor(max_workers=4, thread_name_prefix='nbsr')
 
 
 class UnexpectedEndOfStream(Exception):
@@ -76,7 +100,7 @@ class NonBlockingStreamReader:
                     self.logger.info("Stream EOF")
                     return
 
-        nbsr_executor.submit(_populateQueue, self._s, self._q)
+        _get_nbsr_executor().submit(_populateQueue, self._s, self._q)
 
     def readline(self, timeout=None):
         try:
@@ -229,13 +253,14 @@ def temp_file(filename, mkdtemp=False, touch=True) -> Path:
     return p
 
 
-def from_cwd(*args):
+def from_cwd(*args) -> str:
     absolute = Path(os.path.join(os.getcwd(), *args))
     absolute.parent.mkdir(parents=True, exist_ok=True)
     return absolute
 
 
 def _module_path(mod=None):
+    import inspect
     if not mod:
         frm = inspect.stack()[1]
         mod = inspect.getmodule(frm[0])
@@ -243,6 +268,7 @@ def _module_path(mod=None):
 
 
 def from_module(filename: str = None, as_path: bool = False) -> str | Path:
+    import inspect
     frm = inspect.stack()[1]
     mod = inspect.getmodule(frm[0])
     path: str = None
@@ -279,6 +305,7 @@ def pause(msg='Press Enter to continue...', skip=False):
 
 
 def confirm(abort=False):
+    import click
     return click.confirm('Do you want to continue?', abort=abort)
 
 
@@ -299,6 +326,7 @@ def prompt(msg='Please enter', type=str, default=None, prompt_suffix=': ', hide=
                 return type(ret)
             except ValueError:
                 print(f"Error: '{ret}' is not a valid {type}.")
+    import click
     return click.prompt(
         msg,
         type=type,
@@ -375,7 +403,7 @@ def random_string(length=8):
 
 
 def os_open_file(filepath: str):
-
+    import platform
     if platform.system() == 'Darwin':       # macOS
         subprocess.call(('open', filepath))
     elif platform.system() == 'Windows':    # Windows

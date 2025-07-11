@@ -1,4 +1,3 @@
-from icecream import Source
 from typing import Any, Dict, List, Union
 import inspect
 
@@ -73,6 +72,7 @@ def kdict(*args, **kwargs):
     > d
     > {'a': 1, 'b': 2, 'c': 3}
     """
+    from icecream import Source
     assert not kwargs, "kwargs not allowed"
     callFrame = inspect.currentframe().f_back
     callNode = Source.executing(callFrame).node

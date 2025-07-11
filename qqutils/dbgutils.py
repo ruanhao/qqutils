@@ -1,4 +1,3 @@
-from stopwatch import Stopwatch
 from contextlib import contextmanager
 import traceback
 import logging
@@ -7,7 +6,6 @@ from functools import wraps
 from attr import define
 import time
 from typing import Callable
-import click
 
 __all__ = (
     'assert_that',
@@ -43,6 +41,7 @@ def assert_that(condition_to_fulfill, msg):
 def simple_timing(f):
     @wraps(f)
     def wrap(*args, **kw):
+        from stopwatch import Stopwatch
         stopwatch = Stopwatch(2)
         try:
             return f(*args, **kw)
@@ -55,6 +54,7 @@ def simple_timing(f):
 def debug_timing(f):
     @wraps(f)
     def wrap(*args, **kw):
+        from stopwatch import Stopwatch
         # ts = time.time()
         stopwatch = Stopwatch(2)
         result = f(*args, **kw)
@@ -71,6 +71,8 @@ def debug_timing(f):
 
 @contextmanager
 def time_measurer(msg: str = None, digits: int = 2) -> Callable[[], float]:
+    import click
+    from stopwatch import Stopwatch
     stopwatch = Stopwatch(digits)
     duration = stopwatch.duration
     if msg is not None:

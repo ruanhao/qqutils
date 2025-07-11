@@ -1,9 +1,5 @@
 import logging
 from typing import List
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
 import os
 
 __all__ = "send_mail",
@@ -24,6 +20,11 @@ def send_mail(
         smtp_server='smtp.gmail.com',
         smtp_port=0,
 ):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.application import MIMEApplication
+
     logger.info(f"sending mail to {recipients} (cc:{cc}, bcc:{bcc}) on behalf of '{you}' via <{smtp_server}>, subject: '{subject}', {len(attachments or [])} attachments:{attachments}")
     msg = MIMEMultipart()
     msg['From'] = you

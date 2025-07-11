@@ -1,12 +1,14 @@
 from functools import wraps, partial
 import warnings
 import threading
-from typing import Any, Callable
-import click
+from typing import Any, Callable, TYPE_CHECKING
 import logging
 import time
 import random
 import wrapt
+
+if TYPE_CHECKING:
+    import click
 
 
 __all__ = (
@@ -39,13 +41,14 @@ _logger = logging.getLogger(__name__)
 
 
 # when the command need 'ctx' parameter
-def run_click_command_with_obj(command: click.Command, obj: Any, *args, **kwargs) -> Any:
+def run_click_command_with_obj(command: 'click.Command', obj: Any, *args, **kwargs) -> Any:
     """Run a click command and return the result."""
+    import click
     ctx = click.Context(command, obj=obj)
     return ctx.invoke(command.callback, *args, **kwargs)
 
 
-def run_click_command(command: click.Command, *args, **kwargs) -> Any:
+def run_click_command(command: 'click.Command', *args, **kwargs) -> Any:
     """Run a click command and return the result."""
     return run_click_command_with_obj(command, None, *args, **kwargs)
 

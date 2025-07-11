@@ -2,9 +2,11 @@ import os
 import getpass
 from qqutils.osutils import (
     from_module,
+    from_cwd,
     from_path_str,
     temp_dir,
     under_home,
+    load_dotenv,
 )
 from qqutils.dateutils import timestamp_millis
 
@@ -66,3 +68,34 @@ def test_from_module():
     assert from_module(as_path=True).as_posix().endswith(os.sep.join(("qqutils", "tests")))
     assert from_module("test_osutils.py").endswith(os.sep.join(("qqutils", "tests", "test_osutils.py")))
     assert from_module("test_osutils.py", True).as_posix().endswith(os.sep.join(("qqutils", "tests", "test_osutils.py")))
+
+
+def test_load_dotenv_case_empty():
+    assert not load_dotenv(filename=".env_not_exists")
+
+
+def test_load_dotenv():
+    os.environ["TEST_VAR"] = "original_value"
+    timestamp_str = str(timestamp_millis())
+    with open(from_cwd(".env"), "w") as f:
+        f.write(f"TEST_VAR={timestamp_str}\nTIMESTAMP={timestamp_str}\nTEST_VAR2=${{TIMESTAMP}}\n")
+    assert load_dotenv()
+    assert os.getenv("TEST_VAR") == timestamp_str
+    assert os.getenv("TEST_VAR2") == timestamp_str
+
+
+def test_load_dotenv_case_not_overide():
+    os.environ["TEST_VAR"] = "original_value"
+    timestamp_str = str(timestamp_millis())
+    with open(from_cwd(".env"), "w") as f:
+        f.write(f"TEST_VAR={timestamp_str}\n")
+    assert load_dotenv(override=False)
+    assert os.getenv("TEST_VAR") == "original_value"
+
+
+def test_load_dotenv_case_interpolate_false():
+    timestamp_str = str(timestamp_millis())
+    with open(from_cwd(".env"), "w") as f:
+        f.write(f"TIMESTAMP={timestamp_str}\nTEST_VAR={{TIMESTAMP}}\n")
+    assert load_dotenv(interpolate=False)
+    assert os.getenv("TEST_VAR") == "{TIMESTAMP}"

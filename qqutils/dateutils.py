@@ -1,6 +1,4 @@
 from datetime import datetime, timezone
-from dateutil.parser import parse
-from dateutil import tz
 
 __all__ = (
     'YmdHMS',
@@ -15,6 +13,7 @@ __all__ = (
 
 
 def datestr2ts(dateString, ignoretz=False):
+    from dateutil.parser import parse
     parsed_t = parse(dateString, ignoretz=ignoretz)
     ts = parsed_t.timestamp()
     return ts
@@ -54,6 +53,7 @@ def datetimestr(utc_ts: int = -1, fmt: str = "%m/%d/%Y %H:%M:%S", to_local: bool
     :param tz_str: The timezone to use in form like 'America/New_York'
     """
     import pytz
+    from dateutil import tz
     if utc_ts == -1:
         utc_ts = timestamp_seconds()
     if utc_ts > 253_402_210_800:

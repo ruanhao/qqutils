@@ -2,7 +2,6 @@ import os
 import sys
 import ssl
 import json
-import httpx
 import socket
 import select
 import pickle
@@ -10,20 +9,18 @@ import base64
 import asyncio
 import logging
 import requests
-from tqdm import tqdm
 from pathlib import Path
 from attrs import define, field
-from qqutils.funcutils import cached
 from contextlib import contextmanager
-from qqutils.osutils import from_module
 from functools import partial, lru_cache
-from tqdm.utils import CallbackIOWrapper
-from requests.adapters import HTTPAdapter
-from charset_normalizer import from_bytes
-from requests_toolbelt.multipart import encoder
-from qqutils.threadutils import submit_daemon_thread
-from qqutils.logutils import pdebug, pinfo, perror, sneaky
-from typing import Tuple, Callable, Mapping, Awaitable
+from .funcutils import cached
+from .osutils import from_module
+from .threadutils import submit_daemon_thread
+from .logutils import pdebug, pinfo, perror, sneaky
+from typing import Tuple, Callable, Mapping, Awaitable, TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    import httpx
 
 __all__ = (
     'disable_urllib3_warnings',
@@ -74,7 +71,8 @@ def disable_urllib3_warnings():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
-def check_http_response(response: requests.Response | httpx.Response, need_raise: bool = True) -> None:
+def check_http_response(response: Union[requests.Response, 'httpx.Response'], need_raise: bool = True) -> None:
+    import httpx
     try:
         response.raise_for_status()
     except (requests.HTTPError, httpx.HTTPStatusError):
@@ -89,11 +87,13 @@ def check_http_response(response: requests.Response | httpx.Response, need_raise
 
 @lru_cache(maxsize=8)
 def __http_adapter(retries=2):
+    from requests.adapters import HTTPAdapter
     return HTTPAdapter(max_retries=retries)
 
 
 @lru_cache(maxsize=8)
-def __httpx_mounts(retries=1) -> Mapping[str, httpx.AsyncHTTPTransport]:
+def __httpx_mounts(retries=1) -> Mapping[str, 'httpx.AsyncHTTPTransport']:
+    import httpx
     transport = httpx.AsyncHTTPTransport(verify=False, retries=retries)
     return {
         'http://': transport,
@@ -145,7 +145,9 @@ def http_session_patch(session, url, *args, **kwargs):
 
 # httpx
 
-async def _httpx_method(url: str, method: str, session: httpx.AsyncClient = None, check: bool = True, *args, **kwargs) -> Awaitable[httpx.Response]:
+async def _httpx_method(url: str, method: str, session: 'httpx.AsyncClient' = None, check: bool = True, *args, **kwargs) -> Awaitable['httpx.Response']:
+    import httpx
+    from charset_normalizer import from_bytes
     method = (method or '').lower()
     assert method in ['get', 'post', 'delete', 'put', 'patch']
     s = session or httpx.AsyncClient(mounts=__httpx_mounts())
@@ -159,30 +161,30 @@ async def _httpx_method(url: str, method: str, session: httpx.AsyncClient = None
     return response
 
 
-httpx_get: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='get')
-httpx_post: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='post')
-httpx_put: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='put')
-httpx_delete: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='delete')
-httpx_patch: Callable[..., Awaitable[httpx.Response]] = partial(_httpx_method, method='patch')
+httpx_get: Callable[..., Awaitable['httpx.Response']] = partial(_httpx_method, method='get')
+httpx_post: Callable[..., Awaitable['httpx.Response']] = partial(_httpx_method, method='post')
+httpx_put: Callable[..., Awaitable['httpx.Response']] = partial(_httpx_method, method='put')
+httpx_delete: Callable[..., Awaitable['httpx.Response']] = partial(_httpx_method, method='delete')
+httpx_patch: Callable[..., Awaitable['httpx.Response']] = partial(_httpx_method, method='patch')
 
 
-async def httpx_session_get(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+async def httpx_session_get(session: 'httpx.AsyncClient', url: str, *args, **kwargs) -> Awaitable['httpx.Response']:
     return await _http_method(url, 'get', session, *args, **kwargs)
 
 
-async def httpx_session_post(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+async def httpx_session_post(session: 'httpx.AsyncClient', url: str, *args, **kwargs) -> Awaitable['httpx.Response']:
     return await _http_method(url, 'post', session, *args, **kwargs)
 
 
-async def httpx_session_put(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+async def httpx_session_put(session: 'httpx.AsyncClient', url: str, *args, **kwargs) -> Awaitable['httpx.Response']:
     return await _http_method(url, 'put', session, *args, **kwargs)
 
 
-async def httpx_session_delete(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+async def httpx_session_delete(session: 'httpx.AsyncClient', url: str, *args, **kwargs) -> Awaitable['httpx.Response']:
     return await _http_method(url, 'delete', session, *args, **kwargs)
 
 
-async def httpx_session_patch(session: httpx.AsyncClient, url: str, *args, **kwargs) -> Awaitable[httpx.Response]:
+async def httpx_session_patch(session: 'httpx.AsyncClient', url: str, *args, **kwargs) -> Awaitable['httpx.Response']:
     return await _http_method(url, 'patch', session, *args, **kwargs)
 
 
@@ -618,6 +620,7 @@ def is_port_in_use(port: int) -> bool:
 
 
 def upload_multipart(url: str, path: Path, name='file', progress: bool = False, session: requests.Session = None):
+    from requests_toolbelt.multipart import encoder
     file_size = path.stat().st_size
     filename = path.name
     headers0 = {
@@ -639,6 +642,8 @@ def upload_multipart(url: str, path: Path, name='file', progress: bool = False, 
             return session.post(url, data=multipart_encoder, headers=headers)
 
     with path.open("rb") as f:
+        from tqdm import tqdm
+        from tqdm.utils import CallbackIOWrapper
         with tqdm(total=file_size, unit="B", unit_scale=True, unit_divisor=1024) as t:
             wrapped_file = CallbackIOWrapper(t.update, f, "read")
             multipart_encoder = encoder.MultipartEncoder(
@@ -665,6 +670,7 @@ def download(url: str, path: Path, chunk_size: int = 1024, progress: bool = Fals
                 if chunk:
                     f.write(chunk)
         return
+    from tqdm import tqdm
     with tqdm(total=total, unit='B', unit_scale=True, unit_divisor=1024) as bar:
         with path.open('wb') as f:
             for chunk in r.iter_content(chunk_size=chunk_size):

@@ -1,6 +1,5 @@
 import asyncio
 from typing import Any, Awaitable, Annotated
-from tqdm import tqdm
 import logging
 
 
@@ -32,6 +31,7 @@ def wait_for_complete(
         timeout_seconds: int = -1,
         fast_first: Annotated[bool, "Results are sorted by completion time"] = False,
 ) -> list[Any | Exception]:
+    from tqdm import tqdm
     _tqdm = _DummyTqdm if not progress else tqdm
 
     async def __wrapper(coroutine: Awaitable[Any], pbar: tqdm) -> Any:

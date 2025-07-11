@@ -9,6 +9,16 @@ from .dateutils import timestamp_millis
 import os
 
 
+__all__ = [
+    'create_figure',
+    'save_figure',
+    'draw_single_line',
+    'draw_multi_lines',
+    'draw_single_bar',
+    'draw_grouped_bar',
+    'draw_multi_kde',
+]
+
 logger = logging.getLogger(__name__)
 
 
