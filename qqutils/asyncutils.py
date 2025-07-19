@@ -30,19 +30,22 @@ def wait_for_complete(
         description="Running coroutines",
         timeout_seconds: int = -1,
         fast_first: Annotated[bool, "Results are sorted by completion time"] = False,
+        concurrent_size: Annotated[int, "Number of coroutines to run concurrently"] = 100,
 ) -> list[Any | Exception]:
     from tqdm import tqdm
     _tqdm = _DummyTqdm if not progress else tqdm
+    semaphore = asyncio.Semaphore(concurrent_size)
 
     async def __wrapper(coroutine: Awaitable[Any], pbar: tqdm) -> Any:
-        try:
-            return await coroutine
-        except Exception as e:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.exception(f"Exception in coroutine: [{e}]")
-            raise
-        finally:
-            pbar.update(1)
+        async with semaphore:
+            try:
+                return await coroutine
+            except Exception as e:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.exception(f"Exception in coroutine: [{e}]")
+                raise
+            finally:
+                pbar.update(1)
 
     async def __wait_for_tasks() -> list[Any]:
         with _tqdm(total=len(coroutines), desc=description) as pbar:
